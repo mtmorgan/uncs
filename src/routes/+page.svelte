@@ -1,0 +1,33 @@
+<script>
+  import { Styles, Accordion, AccordionItem } from "@sveltestrap/sveltestrap";
+  import PeopleDatatable from "./PeopleDatatable.svelte";
+  import Ancestry from './Ancestry.svelte';
+  import Geography from './Geography.svelte';
+  let id = 1;
+  let open = true;
+</script>
+
+<Styles />
+
+<h1>Uncs</h1>
+
+<p>
+  'Uncs' is, apparently, a term used by the younger peoples to refer to older
+  individuals with unappreciated wisdom.
+</p>
+
+<p>This project looks at our family genealogical history.</p>
+
+<h2>People</h2>
+
+<PeopleDatatable />
+
+<h2>Ancestry</h2>
+
+<Ancestry />
+
+<h2>Geographical genealogy</h2>
+
+<Geography />
+
+<h2>Implementation notes</h2>
