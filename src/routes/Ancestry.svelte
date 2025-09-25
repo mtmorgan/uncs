@@ -3,40 +3,54 @@
   let ancestryElement: HTMLDivElement;
 
   import Graph from "graphology";
-  import { random } from "graphology-layout";
+  import { circular } from "graphology-layout";
   import FA2Layout from "graphology-layout-forceatlas2/worker";
   import Sigma from "sigma";
 
   import unc_graph from "./unc_graph.json";
-  unc_graph.nodes = unc_graph.nodes.filter(
-    (node) => node.attributes.which !== "synonym_node"
-  );
 
-  const nodeSize = (attributes) => {
-    return attributes.which === "person_node" ? 2 : 0.1;
+  // create edges between person_nodes, rather than via relation_nodes
+  const removeNode = (node: any) => {
+    const r_edges = unc_graph.edges.filter((edge) => edge.target === node.key);
+    const edges = r_edges.slice(1).map((r_edge) => {
+      return {
+        // FIXME: assumes first edge is always 'child-of'
+        source: r_edges[0].source,
+        target: r_edge.source,
+      };
+    });
+    return edges;
+  };
+  const p_edges = unc_graph.nodes
+    .filter((node) => node.attributes.which === "relation_node")
+    .map(removeNode)
+    .flat();
+
+  const p_graph = {
+    nodes: unc_graph.nodes.filter(
+      (node) => node.attributes.which === "person_node"
+    ),
+    edges: p_edges,
   };
 
   const nodeLabel = (attributes) => {
-    let label = "";
-    if (attributes.which === "person_node") {
-      label = attributes.name;
-      if (attributes.date) {
-        label += " (" + attributes.date + ")";
-      }
+    let label = attributes.name;
+    if (attributes.date) {
+      label += " (" + attributes.date + ")";
     }
     return label;
   };
 
   const graph = new Graph();
-  graph.import(unc_graph);
+  graph.import(p_graph);
   graph.updateEachNodeAttributes((nodeId, attributes) => {
     return {
       ...attributes,
-      size: nodeSize(attributes),
+      size: 2,
       label: nodeLabel(attributes),
     };
   });
-  random.assign(graph); // x, y coordinates
+  circular.assign(graph); // x, y coordinates
 
   onMount(() => {
     const renderer = new Sigma(graph, ancestryElement);
@@ -51,11 +65,10 @@
       return attributes;
     });
 
-    const layout = new FA2Layout(graph);
+    const layout = new FA2Layout(graph, { settings: { gravity: 3 }});
     layout.start();
     setTimeout(() => {
       layout.stop();
-      console.log("ForceAtlas2 layout stopped.");
     }, 5000);
   });
 </script>
