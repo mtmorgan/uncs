@@ -22,11 +22,7 @@
         { title: "Siblings", data: "siblings" },
         { title: "Notes", data: "notes" },
       ],
-      select: {
-        style: "single",
-        info: false,
-      },
-      scrollY: "400px",
+      scrollY: "300px",
       paging: false,
     });
   });

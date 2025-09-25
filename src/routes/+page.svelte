@@ -1,8 +1,8 @@
 <script>
   import { Styles, Accordion, AccordionItem } from "@sveltestrap/sveltestrap";
-  import PeopleDatatable from "./PeopleDatatable.svelte";
-  import Ancestry from './Ancestry.svelte';
-  import Geography from './Geography.svelte';
+  import People from "./People.svelte";
+  import Ancestry from "./Ancestry.svelte";
+  import Geography from "./Geography.svelte";
   let id = 1;
   let open = true;
 </script>
@@ -20,7 +20,7 @@
 
 <h2>People</h2>
 
-<PeopleDatatable />
+<People />
 
 <h2>Ancestry</h2>
 
@@ -31,3 +31,14 @@
 <Geography />
 
 <h2>Implementation notes</h2>
+
+<p>Ancestry information was collated by Rachel.</p>
+
+<p>
+  This application uses the <a href="https://svelte.dev">svelte</a>
+  framework. Data are displayed using
+  <a href="https://datatables.net/">DataTables</a>. The ancestry graph uses
+  <a href="https://graphology.github.io/">graphology</a>
+  and
+  <a href="https://www.sigmajs.org/">Sigma.js</a>.
+</p>

@@ -1,6 +1,7 @@
 <script lang="ts">
   import { onMount } from "svelte";
   let ancestryElement: HTMLDivElement;
+  let notesElement: HTMLParagraphElement;
 
   import Graph from "graphology";
   import { circular } from "graphology-layout";
@@ -9,7 +10,8 @@
 
   import unc_graph from "./unc_graph.json";
 
-  // create edges between person_nodes, rather than via relation_nodes
+  // Create edges between person_nodes, rather than via relation_nodes
+
   const removeNode = (node: any) => {
     const r_edges = unc_graph.edges.filter((edge) => edge.target === node.key);
     const edges = r_edges.slice(1).map((r_edge) => {
@@ -26,6 +28,8 @@
     .map(removeNode)
     .flat();
 
+  // Import into graphology and annotate for Sigma.js
+
   const p_graph = {
     nodes: unc_graph.nodes.filter(
       (node) => node.attributes.which === "person_node"
@@ -33,7 +37,7 @@
     edges: p_edges,
   };
 
-  const nodeLabel = (attributes) => {
+  const nodeLabel = (attributes: any) => {
     let label = attributes.name;
     if (attributes.date) {
       label += " (" + attributes.date + ")";
@@ -43,29 +47,38 @@
 
   const graph = new Graph();
   graph.import(p_graph);
-  graph.updateEachNodeAttributes((nodeId, attributes) => {
-    return {
-      ...attributes,
-      size: 2,
-      label: nodeLabel(attributes),
-    };
+  graph.updateEachNodeAttributes((key, attributes) => {
+    const update = { ...attributes };
+    update.label = nodeLabel(attributes);
+    update.size = 2;
+    return update;
   });
-  circular.assign(graph); // x, y coordinates
+  graph.updateNodeAttributes("0001", (attributes) => {
+    // root is special
+    const update = { ...attributes };
+    update.size = 5;
+    update.color = "purple";
+    return update;
+  });
+  circular.assign(graph); // x, y coordinates to seed layout algorithm
 
   onMount(() => {
+
+    // Create Sigma.js graph, with node click displaying notes
+
     const renderer = new Sigma(graph, ancestryElement);
-    renderer.setSetting("nodeReducer", (node, attributes) => {
-      if (node === "0001") {
-        return {
-          ...attributes,
-          size: 5,
-          color: "purple",
-        };
-      }
-      return attributes;
+    renderer.on("clickNode", ({ node }) => {
+      const attributes = graph.getNodeAttributes(node);
+      const label = nodeLabel(attributes);
+      const siblings = attributes.siblings || "Unknown";
+      const notes = attributes.notes || "None";
+      notesElement.innerHTML =
+        label + "<br/>Siblings: " + siblings + "<br/>Notes: " + notes;
     });
 
-    const layout = new FA2Layout(graph, { settings: { gravity: 3 }});
+    // Graph layout
+
+    const layout = new FA2Layout(graph, { settings: { gravity: 3 } });
     layout.start();
     setTimeout(() => {
       layout.stop();
@@ -76,5 +89,7 @@
 <div
   id="ancestry-container"
   bind:this={ancestryElement}
-  style="height: 500px; border: 1px solid #ccc;"
+  style="height: 400px; width: 100%; border: 1px solid #ccc;"
 ></div>
+
+<p id="notes-element" bind:this={notesElement}></p>
