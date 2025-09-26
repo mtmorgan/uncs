@@ -50,7 +50,7 @@
   graph.updateEachNodeAttributes((key, attributes) => {
     const update = { ...attributes };
     update.label = nodeLabel(attributes);
-    update.size = 2;
+    update.size = 3;
     return update;
   });
   graph.updateNodeAttributes("0001", (attributes) => {
