@@ -4,8 +4,8 @@
   let notesElement: HTMLParagraphElement;
 
   import Graph from "graphology";
-  import { circular } from "graphology-layout";
-  import FA2Layout from "graphology-layout-forceatlas2/worker";
+  import { bfsFromNode } from "graphology-traversal";
+
   import Sigma from "sigma";
 
   import unc_graph from "./unc_graph.json";
@@ -60,36 +60,59 @@
     update.color = "purple";
     return update;
   });
-  circular.assign(graph); // x, y coordinates to seed layout algorithm
+  // circular.assign(graph); // x, y coordinates to seed layout algorithm
+  let count = new Map();
+  bfsFromNode(graph, "0001", function (node, attr, depth) {
+    if (depth === 0) {
+      graph.updateNodeAttributes(node, (attributes) => {
+        attributes.x = 0;
+        attributes.y = 0;
+        attributes.theta = 0;
+        attributes.childVisits = 0;
+        return attributes;
+      });
+    } else {
+      const parent = graph.inboundNeighbors(node)[0]; // only 1
+      const { x, y, theta, childVisits } = graph.getNodeAttributes(parent);
+      const scale = 2 * (2 * childVisits  - 1) * Math.min(depth, 7);
+      const thetaPrime = theta + Math.PI / scale;
+      graph.updateNodeAttributes(node, (attributes) => {
+        attributes.x = x + Math.sin(thetaPrime);
+        attributes.y = y + Math.cos(thetaPrime);
+        attributes.theta = thetaPrime;
+        attributes.childVisits = 0;
+        return attributes;
+      });
+      graph.setNodeAttribute(parent, "childVisits", childVisits + 1);
+    }
+  });
 
   onMount(() => {
-
     // Create Sigma.js graph, with node click displaying notes
 
     const renderer = new Sigma(graph, ancestryElement);
     renderer.on("clickNode", ({ node }) => {
       const attributes = graph.getNodeAttributes(node);
       const label = nodeLabel(attributes);
+      const place = attributes.place || "Unknown";
       const siblings = attributes.siblings || "Unknown";
       const notes = attributes.notes || "None";
       notesElement.innerHTML =
-        label + "<br/>Siblings: " + siblings + "<br/>Notes: " + notes;
+        label +
+        "<br/>Place: " +
+        place +
+        "<br/>Siblings: " +
+        siblings +
+        "<br/>Notes: " +
+        notes;
     });
-
-    // Graph layout
-
-    const layout = new FA2Layout(graph, { settings: { gravity: 3 } });
-    layout.start();
-    setTimeout(() => {
-      layout.stop();
-    }, 5000);
   });
 </script>
 
 <div
   id="ancestry-container"
   bind:this={ancestryElement}
-  style="height: 400px; width: 100%; border: 1px solid #ccc;"
+  style="height: 600px; width: 100%; border: 1px solid #ccc;"
 ></div>
 
 <p id="notes-element" bind:this={notesElement}></p>
