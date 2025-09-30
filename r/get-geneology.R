@@ -1,9 +1,13 @@
-## https://docs.google.com/spreadsheets/d/1YiHbIKcBRB2VxRNY7E7izv7B0d7rV4MM_1TSTwIIUZw
-sheet_id <- "1YiHbIKcBRB2VxRNY7E7izv7B0d7rV4MM_1TSTwIIUZw"
+sheet_id <- Sys.getenv("UNCS_SHEET_ID")
+password <- Sys.getenv("UNCS_PASSWORD")
+stopifnot(nzchar(sheet_id), nzchar(password))
+
 setwd('/Users/mtmorgan/a/git/uncs/r/')
+
 library(dplyr)
 requireNamespace("googlesheets4")
 requireNamespace("memoise")
+requireNamespace("rjsoncons")
 
 ## memoise data access functions
 cache_location <- tools::R_user_dir("family-tree", "data")
@@ -324,68 +328,92 @@ p_nodes <-
     )
 
 ## convert to JSON graph structure
-
-library(rjsoncons)
-json_p_nodes <-
-    jsonlite::toJSON(p_nodes) |>
-    rjsoncons::j_query('[].{
-        "key": key,
-         "attributes": {
-            "which": `"person_node"`,
-            "name": name,
-            "date": date,
-            "place": place,
-            "siblings": siblings,
-            "notes": notes
-         }
-    }')
-
-json_s_nodes <-
-    jsonlite::toJSON(s_nodes) |>
-    rjsoncons::j_query('[].{
-        "key": key,
-        "attributes": {
-            "which": `"synonym_node"`,
-            "synonym_of": synonym_of,
-            "name": name,
-            "date": date,
-            "place": place,
-            "siblings": siblings,
-            "notes": notes
-        }
-    }')
-
-json_r_nodes <-
-    jsonlite::toJSON(r_nodes) |>
-    rjsoncons::j_query('[].{
+as_json <-
+    function(p_nodes, s_nodes, r_nodes, edges, encrypted = FALSE)
+{       
+    if (encrypted) {
+        node_query_fmt <- '[].{
+            "key": key,
+             "attributes": {
+                "which": `"%s"`,
+                "name": name,
+                "date": date,
+                "place": place,
+                "siblings": siblings,
+                "notes": notes
+             }
+          }'
+    } else {
+        node_query_fmt <- '[].{
+            "key": key,
+             "attributes": {
+                "which": `"%s"`,
+                "name": key
+             }
+          }'
+    }
+    r_node_query_fmt <- '[].{
         "key": key,
         "attributes": {
             "which": `"relation_node"`,
             "relation": relation
         }
-    }')
-
-json_edges <-
-    jsonlite::toJSON(edges) |>
-    rjsoncons::j_query('[].{
+    }'
+    edge_query_fmt <- '[].{
         "key": key,
         "source": source,
         "target": target,
         "attributes": {
             "label": edge_label
         }
-    }')
+    }'
+    graph_fmt <- '{
+        "nodes": %s,
+        "edges": %s
+    }'
+            
+    json_p_nodes <-
+        jsonlite::toJSON(p_nodes) |>
+        rjsoncons::j_query(sprintf(node_query_fmt, "person_node"))
 
-## hack graph object description
+    json_s_nodes <-
+        jsonlite::toJSON(s_nodes) |>
+        ## FIXME: include synonym_of
+        rjsoncons::j_query(sprintf(node_query_fmt, "synonym_node"))
 
-## combind person, synonym, and relationship nodes
-json_nodes <-
-    paste0(json_p_nodes, json_s_nodes, json_r_nodes) |>
-    gsub("][", ",", x = _, fixed = TRUE)
-## assemble nodes and edges
-json_graph <- paste0('{',
-    '"nodes":', json_nodes, ',',
-    '"edges":', json_edges,
-'}')
+    json_r_nodes <-
+        jsonlite::toJSON(r_nodes) |>
+        rjsoncons::j_query(r_node_query_fmt)
 
-writeLines(json_graph, "../src/routes/unc_graph.json")
+    json_edges <-
+        jsonlite::toJSON(edges) |>
+        rjsoncons::j_query(edge_query_fmt)
+
+    ## hack graph object description
+
+    ## combind person, synonym, and relationship nodes
+    json_nodes <-
+        paste0(json_p_nodes, json_s_nodes, json_r_nodes) |>
+        gsub("][", ",", x = _, fixed = TRUE)
+    ## assemble nodes and edges
+    json_graph <- sprintf(graph_fmt, json_nodes, json_edges)
+
+    if (encrypted) {
+        salt <- sodium::random(32)
+        print(salt)
+        key <- sodium::scrypt(charToRaw(password), salt)
+        print(key)
+        msg <- charToRaw(json_graph)
+        encrypted_graph <- sodium::data_encrypt(msg, key)
+        ## tag <- sodium::data_tag(msg, key)
+        writeBin(
+            c(salt, attr(encrypted_graph, "nonce"), encrypted_graph),#, tag),
+            "../static/unc_graph.json.enc"
+        )
+    } else {
+        writeLines(json_graph, "../src/routes/unc_graph.json")
+    }
+}
+
+as_json(p_nodes, s_nodes, r_nodes, edges, encrypted = FALSE)
+as_json(p_nodes, s_nodes, r_nodes, edges, encrypted = TRUE)

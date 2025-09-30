@@ -3,6 +3,7 @@
   import People from "./People.svelte";
   import Ancestry from "./Ancestry.svelte";
   import Geography from "./Geography.svelte";
+  import Decrypt from "./Decrypt.svelte";
 </script>
 
 <Styles />
@@ -12,10 +13,11 @@
 
   <p>
     'Uncs' is, apparently, a term used by the younger peoples to refer to older
-    individuals with unappreciated wisdom.
+    individuals with unappreciated wisdom. This project looks at our family
+    ancestry.
   </p>
 
-  <p>This project looks at our family genealogical history.</p>
+  <Decrypt />
 
   <h2>People</h2>
   <p>
@@ -44,13 +46,19 @@
     be sure to follow the lineage you're interested in!
   </p>
 
-  <p>From a high-level view, the graph suggests that paternal lineages are generally easier to follow the maternal lineages. Also, the deepest lineages involve generations on the same continent (the Johnson maternal lineage in the US; the Morgan paternal lineage in the UK).</p>
+  <p>
+    From a high-level view, the graph suggests that paternal lineages are
+    generally easier to follow the maternal lineages. Also, the deepest lineages
+    involve generations on the same continent (the Johnson maternal lineage in
+    the US; the Morgan paternal lineage in the UK).
+  </p>
 
   <Ancestry />
-
+  <!--
   <h2>Geographical genealogy</h2>
 
   <Geography />
+  -->
 
   <h2>Implementation notes</h2>
 
