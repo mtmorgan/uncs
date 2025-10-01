@@ -20,17 +20,14 @@
 
   <Decrypt />
 
-  <h2>People</h2>
-  <p>
-    Some of the information available for people in this project is summarized
-    in the table below. Additional data, e.g., sources, could also be extracted
-    from the original Google sheets.
-  </p>
-
-  {#if graphState.name}
-    {#key graphState.name}
-      <People unc_graph={graphState.graph} />
-    {/key}
+  {#if graphState.name === "unc_graph.json.enc"}
+    <h2>People</h2>
+    <p>
+      Some of the information available for people in this project is summarized
+      in the table below. Additional data, e.g., sources, could also be
+      extracted from the original Google sheets.
+    </p>
+    <People unc_graph={graphState.graph} />
   {/if}
 
   <h2>Ancestry</h2>
@@ -60,7 +57,7 @@
 
   {#if graphState.name}
     {#key graphState.name}
-      <Ancestry unc_graph={graphState.graph}/>
+      <Ancestry unc_graph={graphState.graph} />
     {/key}
   {/if}
 

@@ -31,6 +31,7 @@
       columns: columns,
       scrollY: "300px",
       paging: false,
+      destroy: true,
     });
   });
 </script>

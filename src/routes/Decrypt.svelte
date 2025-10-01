@@ -9,9 +9,10 @@
   } from "@sveltestrap/sveltestrap";
   import { onMount } from "svelte";
   import { loadGraph, loadEncryptedGraph } from "../LoadGraph.svelte.js";
+import { resolve } from '$app/paths';
 
-  const jsonGraph = "/unc_graph.json";
-  const jsonGraphEncrypted = "/unc_graph.json.enc";
+  const jsonGraph = resolve(`/unc_graph.json`);
+  const jsonGraphEncrypted = resolve('/unc_graph.json.enc');
 
   // DOM elements
   let password: string;
