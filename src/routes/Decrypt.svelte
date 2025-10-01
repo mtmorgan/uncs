@@ -5,89 +5,48 @@
     Label,
     Button,
     Input,
+    InputGroup,
   } from "@sveltestrap/sveltestrap";
-  import sodium from "libsodium-wrappers-sumo";
+  import { onMount } from "svelte";
+  import { loadGraph, loadEncryptedGraph } from "../LoadGraph.svelte.js";
 
-  const encodedJson = "/unc_graph.json.enc";
+  const jsonGraph = "/unc_graph.json";
+  const jsonGraphEncrypted = "/unc_graph.json.enc";
 
   // DOM elements
   let password: string;
   let status: HTMLElement;
-  let output: HTMLElement;
 
   async function handleDecryption(): Promise<void> {
-    await sodium.ready;
-
     status.textContent = "Fetching and decrypting file...";
-    output.textContent = "";
-
-    try {
-      const fileData = await fetchFile(encodedJson);
-      const decryptedContent = decrypt(fileData, password);
-      status.textContent = "File decrypted successfully.";
-      output.textContent = decryptedContent;
-    } catch (error) {
-      console.error("Decryption failed:", error);
-      status.textContent = "Decryption failed: incorrect password?";
-    }
+    const response = await loadEncryptedGraph(jsonGraphEncrypted, password);
+    status.textContent = response;
   }
 
-  async function fetchFile(url: string): Promise<ArrayBuffer> {
-    const response = await fetch(url);
-    if (!response.ok) {
-      throw new Error(`HTTP error. Status: ${response.status}`);
-    }
-    return await response.arrayBuffer();
-  }
-
-  function decrypt(buffer: ArrayBuffer, password: string): string {
-    // ArrayBuffer as Uint8Array
-    const bytes = new Uint8Array(buffer);
-
-    // Extract salt (32 bytes), nonce (24 bytes), and cipher
-    const salt = bytes.slice(0, 32);
-    const nonce = bytes.slice(32, 56);
-    const cipher = bytes.slice(56);
-
-    // Derive key from password, following R sodium package `scrypt()`
-    const key = sodium.crypto_pwhash_scryptsalsa208sha256(
-      32,
-      password,
-      salt,
-      sodium.crypto_pwhash_scryptsalsa208sha256_OPSLIMIT_INTERACTIVE,
-      sodium.crypto_pwhash_scryptsalsa208sha256_MEMLIMIT_INTERACTIVE
-    );
-
-    // Decrypt cipher buffer
-    const decrypted = sodium.crypto_secretbox_open_easy(
-      cipher,
-      nonce,
-      key
-    );
-
-    return new TextDecoder().decode(decrypted);
-  }
+  onMount(async () => {
+    // Preload unencrypted graph, in case user doesn't want to decrypt
+    await loadGraph(jsonGraph);
+  });
 </script>
 
 <p>
   The ancestry file is encrypted and requires a password. Without the password,
   information identifying individuals is not displayed. The password was shared
-  on WhatsApp.
+  on WhatsApp. Enter the password below and click 'Decrypt' to load the encrypted data.
 </p>
 
 <Form on:submit={handleDecryption}>
-  <FormGroup>
-    <Label for="password">Enter password:</Label>
+  <InputGroup>
     <Input
       type="password"
       id="password"
       bind:value={password}
       placeholder=""
       required
+      autocomplete="current-password"
     />
-  </FormGroup>
-  <Button type="submit" color="primary">Submit</Button>
+  <Button type="submit" color="primary">Decrypt</Button>
+  </InputGroup>
 </Form>
 
 <p id="status" bind:this={status}></p>
-<pre id="output" bind:this={output}></pre>

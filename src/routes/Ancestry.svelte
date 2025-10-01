@@ -8,7 +8,7 @@
 
   import Sigma from "sigma";
 
-  import unc_graph from "./unc_graph.json";
+  const { unc_graph } = $props();
 
   // Create edges between person_nodes, rather than via relation_nodes
 
@@ -61,7 +61,6 @@
     return update;
   });
   // circular.assign(graph); // x, y coordinates to seed layout algorithm
-  let count = new Map();
   bfsFromNode(graph, "0001", function (node, attr, depth) {
     if (depth === 0) {
       graph.updateNodeAttributes(node, (attributes) => {

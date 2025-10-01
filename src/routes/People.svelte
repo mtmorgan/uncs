@@ -1,7 +1,8 @@
 <script lang="ts">
   import { onMount } from "svelte";
   import DataTable from "datatables.net-dt";
-  import unc_graph from "./unc_graph.json";
+
+  const { unc_graph } = $props();
 
   //let DataTable: typeof import("datatables.net");
   let peopleTableElement: HTMLTableElement;

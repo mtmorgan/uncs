@@ -4,6 +4,7 @@
   import Ancestry from "./Ancestry.svelte";
   import Geography from "./Geography.svelte";
   import Decrypt from "./Decrypt.svelte";
+  import { graphState } from "../LoadGraph.svelte";
 </script>
 
 <Styles />
@@ -26,7 +27,11 @@
     from the original Google sheets.
   </p>
 
-  <People />
+  {#if graphState.name}
+    {#key graphState.name}
+      <People unc_graph={graphState.graph} />
+    {/key}
+  {/if}
 
   <h2>Ancestry</h2>
 
@@ -53,7 +58,12 @@
     the US; the Morgan paternal lineage in the UK).
   </p>
 
-  <Ancestry />
+  {#if graphState.name}
+    {#key graphState.name}
+      <Ancestry unc_graph={graphState.graph}/>
+    {/key}
+  {/if}
+
   <!--
   <h2>Geographical genealogy</h2>
 

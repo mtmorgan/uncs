@@ -411,7 +411,7 @@ as_json <-
             "../static/unc_graph.json.enc"
         )
     } else {
-        writeLines(json_graph, "../src/routes/unc_graph.json")
+        writeLines(json_graph, "../static/unc_graph.json")
     }
 }
 
