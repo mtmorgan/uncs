@@ -7,6 +7,9 @@ export const graphState = $state({
 
 // Unencrypted graph
 
+/**
+ * @param {string} url
+ */
 export async function loadGraph(url) {
   let message = '';
   try {
@@ -27,6 +30,11 @@ export async function loadGraph(url) {
 
 // Encrypted graph
 
+
+/**
+ * @param {string} url
+ * @param {string} password
+ */
 async function decrypt(url, password) {
   await sodium.ready;
 
@@ -64,6 +72,10 @@ async function decrypt(url, password) {
   return new TextDecoder().decode(decrypted);
 }
 
+/**
+ * @param {string} url
+ * @param {string} password
+ */
 export async function loadEncryptedGraph(url, password) {
   let message = '';
   try {

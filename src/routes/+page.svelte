@@ -84,13 +84,14 @@
     <a href="https://mtmorgan.github.io/rjsoncons">rjsoncons</a>. The encrypted
     version of the data were made using
     <a href="https://jeroen.r-universe.dev/sodium">sodium</a>
-    in *R*.
+    in <em>R</em>.
   </p>
 
   <p>
     This application uses the <a href="https://svelte.dev">svelte</a>
     framework. Data decrypted in JavaScript used the
-    <a href="">libsodium-wrappers-sumo</a> WASM. Data are displayed using
+    <a href="https://github.com/jedisct1/libsodium.js">libsodium.js</a> WASM.
+    Data are displayed using
     <a href="https://datatables.net/">DataTables</a>. The ancestry graph uses
     <a href="https://graphology.github.io/">graphology</a>
     and

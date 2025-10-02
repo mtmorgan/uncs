@@ -11,7 +11,7 @@
   import { loadGraph, loadEncryptedGraph } from "../LoadGraph.svelte.js";
 import { resolve } from '$app/paths';
 
-  const jsonGraph = resolve(`/unc_graph.json`);
+  const jsonGraph = resolve('/unc_graph.json');
   const jsonGraphEncrypted = resolve('/unc_graph.json.enc');
 
   // DOM elements
