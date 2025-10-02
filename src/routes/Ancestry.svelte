@@ -13,8 +13,10 @@
   // Create edges between person_nodes, rather than via relation_nodes
 
   const removeNode = (node: any) => {
-    const r_edges = unc_graph.edges.filter((edge) => edge.target === node.key);
-    const edges = r_edges.slice(1).map((r_edge) => {
+    const r_edges = unc_graph.edges.filter(
+      (edge: { target: string }) => edge.target === node.key
+    );
+    const edges = r_edges.slice(1).map((r_edge: { source: any }) => {
       return {
         // FIXME: assumes first edge is always 'child-of'
         source: r_edges[0].source,
@@ -24,7 +26,10 @@
     return edges;
   };
   const p_edges = unc_graph.nodes
-    .filter((node) => node.attributes.which === "relation_node")
+    .filter(
+      (node: { attributes: { which: string } }) =>
+        node.attributes.which === "relation_node"
+    )
     .map(removeNode)
     .flat();
 
@@ -32,7 +37,8 @@
 
   const p_graph = {
     nodes: unc_graph.nodes.filter(
-      (node) => node.attributes.which === "person_node"
+      (node: { attributes: { which: string } }) =>
+        node.attributes.which === "person_node"
     ),
     edges: p_edges,
   };
@@ -50,7 +56,7 @@
   graph.updateEachNodeAttributes((key, attributes) => {
     const update = { ...attributes };
     update.label = nodeLabel(attributes);
-    update.size = 3;
+    update.size = 2;
     return update;
   });
   graph.updateNodeAttributes("0001", (attributes) => {
@@ -73,7 +79,7 @@
     } else {
       const parent = graph.inboundNeighbors(node)[0]; // only 1
       const { x, y, theta, childVisits } = graph.getNodeAttributes(parent);
-      const scale = 2 * (2 * childVisits  - 1) * Math.min(depth, 7);
+      const scale = 2 * (2 * childVisits - 1) * Math.min(depth, 7);
       const thetaPrime = theta + Math.PI / scale;
       graph.updateNodeAttributes(node, (attributes) => {
         attributes.x = x + Math.sin(thetaPrime);
@@ -88,7 +94,6 @@
 
   onMount(() => {
     // Create Sigma.js graph, with node click displaying notes
-
     const renderer = new Sigma(graph, ancestryElement);
     renderer.on("clickNode", ({ node }) => {
       const attributes = graph.getNodeAttributes(node);
@@ -111,7 +116,7 @@
 <div
   id="ancestry-container"
   bind:this={ancestryElement}
-  style="height: 600px; width: 100%; border: 1px solid #ccc;"
+  style="height: 400px; width: 100%; border: 1px solid #ccc;"
 ></div>
 
 <p id="notes-element" bind:this={notesElement}></p>

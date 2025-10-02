@@ -16,15 +16,11 @@
     let columns = [
       { title: "Key", data: "key", orderable: true },
       { title: "Name", data: "name", orderable: true },
+      { title: "Date", data: "date", orderable: true },
+      { title: "Place", data: "place", orderable: true },
+      { title: "Siblings", data: "siblings", orderable: false },
+      { title: "Notes", data: "notes", orderable: false },
     ];
-    if (people[0].key !== people[0].name) {
-      columns = columns.concat(
-        { title: "Date", data: "date", orderable: true },
-        { title: "Place", data: "place", orderable: true },
-        { title: "Siblings", data: "siblings" },
-        { title: "Notes", data: "notes" }
-      );
-    }
 
     new DataTable(peopleTableElement, {
       data: people,

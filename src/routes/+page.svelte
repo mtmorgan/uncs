@@ -13,9 +13,10 @@
   <h1>Uncs</h1>
 
   <p>
-    'Uncs' is, apparently, a term used by the younger peoples to refer to older
-    individuals with unappreciated wisdom. This project looks at our family
-    ancestry.
+    An 'unc' is, apparently, a term used by the younger peoples to refer to
+    older individuals with unappreciated (by the younger peoples) wisdom. This
+    project looks at our family ancestry using information compiled by other
+    family members. This project looks at our family ancestry.
   </p>
 
   <Decrypt />
@@ -69,26 +70,38 @@
 
   <h2>Implementation notes</h2>
 
+  <p>Ancestry information was collated by Rachel.</p>
+
   <p>
-    Ancestry information was collated by Rachel. The original Google Sheets
-    document was parsed using <em>R</em>, particularly the
+    The original Google Sheets document was parsed using <em>R</em>,
+    particularly the
     <a href="https://googlesheets4.tidyverse.org">googlesheets4</a>
     and <a href="https://dplyr.tidyverse.org/">dplyr</a> packages. The
     <em>R</em>
     representations were translated to JSON using
     <a href="https://jeroen.r-universe.dev/jsonlite">jsonlite</a>, with JSON
     further transformed using
-    <a href="https://mtmorgan.github.io/rjsoncons">rjsoncons</a>.
+    <a href="https://mtmorgan.github.io/rjsoncons">rjsoncons</a>. The encrypted
+    version of the data were made using
+    <a href="https://jeroen.r-universe.dev/sodium">sodium</a>
+    in *R*.
   </p>
 
   <p>
     This application uses the <a href="https://svelte.dev">svelte</a>
-    framework. Data are displayed using
+    framework. Data decrypted in JavaScript used the
+    <a href="">libsodium-wrappers-sumo</a> WASM. Data are displayed using
     <a href="https://datatables.net/">DataTables</a>. The ancestry graph uses
     <a href="https://graphology.github.io/">graphology</a>
     and
     <a href="https://www.sigmajs.org/">Sigma.js</a>. I developed the ancestry
-    ßlayout algorithm, using vague memories from Mr. Smith's high school
-    Calculus class -- something about 'SOH CAH TOA' on the Nile.
+    layout algorithm, using vague memories from Mr. Smith's high school Calculus
+    class -- something about 'SOH CAH TOA' on the Nile.
+  </p>
+
+  <p>
+    Package source is available on <a href="https://github.com/mtmorgan/uncs"
+      >GitHub</a
+    >.
   </p>
 </Container>

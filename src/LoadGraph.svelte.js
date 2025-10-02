@@ -70,7 +70,7 @@ export async function loadEncryptedGraph(url, password) {
     const graphText = await decrypt(url, password);
     graphState.graph = JSON.parse(graphText);
     graphState.name = url.split('/').pop() ?? "";
-    message = 'Loaded encrypted graph';
+    message = 'Data decrypted!';
   } catch (error) {
     message = "Decryption failed: incorrect password?";
   }
