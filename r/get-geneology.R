@@ -8,6 +8,7 @@ library(dplyr)
 requireNamespace("googlesheets4")
 requireNamespace("memoise")
 requireNamespace("rjsoncons")
+requireNamespace("sodium")
 
 ## memoise data access functions
 cache_location <- tools::R_user_dir("family-tree", "data")
@@ -150,12 +151,11 @@ sheet_data <-
         edges <-
             edges |>
             left_join(r_nodes, by = "relation") |>
-            select(
-                key = key.x,
-                source = person,
-                target = key.y,
-                edge_label
-            )
+            mutate(
+                source = if_else(edge_label == "child-of", person, key.y),
+                target = if_else(edge_label == "child-of", key.y, person)
+            ) |> 
+            select(key = key.x, source, target, edge_label)
     } else {
         edges <- tibble(
             key = character(),

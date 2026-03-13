@@ -13,14 +13,16 @@
   // Create edges between person_nodes, rather than via relation_nodes
 
   const removeNode = (node: any) => {
-    const r_edges = unc_graph.edges.filter(
-      (edge: { target: string }) => edge.target === node.key
+    const child = unc_graph.edges.filter(
+      (edge: { source: string; target: string }) => edge.target == node.key,
     );
-    const edges = r_edges.slice(1).map((r_edge: { source: any }) => {
+    const parents = unc_graph.edges.filter(
+      (edge: { source: string; target: string }) => edge.source == node.key,
+    );
+    const edges = parents.map((parent: { source: string; target: string }) => {
       return {
-        // FIXME: assumes first edge is always 'child-of'
-        source: r_edges[0].source,
-        target: r_edge.source,
+        source: child[0].source,
+        target: parent.target,
       };
     });
     return edges;
