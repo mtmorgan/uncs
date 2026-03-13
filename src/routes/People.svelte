@@ -9,7 +9,7 @@
   let people = unc_graph.nodes
     .filter(
       (node: { attributes: { which: string } }) =>
-        node.attributes.which === "person_node"
+        node.attributes.which === "person_node",
     )
     .map((node: { key: any; attributes: any }) => {
       return { key: node.key, ...node.attributes };

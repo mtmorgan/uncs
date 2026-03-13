@@ -9,10 +9,10 @@
   } from "@sveltestrap/sveltestrap";
   import { onMount } from "svelte";
   import { loadGraph, loadEncryptedGraph } from "../LoadGraph.svelte.js";
-import { resolve } from '$app/paths';
+  import { resolve } from "$app/paths";
 
-  const jsonGraph = resolve('/unc_graph.json');
-  const jsonGraphEncrypted = resolve('/unc_graph.json.enc');
+  const jsonGraph = resolve("/unc_graph.json" as unknown as "/");
+  const jsonGraphEncrypted = resolve("/unc_graph.json.enc" as unknown as "/");
 
   // DOM elements
   let password: string;
@@ -33,7 +33,8 @@ import { resolve } from '$app/paths';
 <p>
   The ancestry file is encrypted and requires a password. Without the password,
   information identifying individuals is not displayed. The password was shared
-  on WhatsApp. Enter the password below and click 'Decrypt' to load the encrypted data.
+  on WhatsApp. Enter the password below and click 'Decrypt' to load the
+  encrypted data.
 </p>
 
 <Form on:submit={handleDecryption}>
@@ -46,7 +47,7 @@ import { resolve } from '$app/paths';
       required
       autocomplete="current-password"
     />
-  <Button type="submit" color="primary">Decrypt</Button>
+    <Button type="submit" color="primary">Decrypt</Button>
   </InputGroup>
 </Form>
 

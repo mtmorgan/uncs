@@ -30,7 +30,7 @@
   const p_edges = unc_graph.nodes
     .filter(
       (node: { attributes: { which: string } }) =>
-        node.attributes.which === "relation_node"
+        node.attributes.which === "relation_node",
     )
     .map(removeNode)
     .flat();
@@ -40,7 +40,7 @@
   const p_graph = {
     nodes: unc_graph.nodes.filter(
       (node: { attributes: { which: string } }) =>
-        node.attributes.which === "person_node"
+        node.attributes.which === "person_node",
     ),
     edges: p_edges,
   };

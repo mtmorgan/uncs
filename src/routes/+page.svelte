@@ -1,5 +1,18 @@
 <script>
-  import { Styles, Container } from "@sveltestrap/sveltestrap";
+  import {
+    Styles,
+    Container,
+    Navbar,
+    NavbarBrand,
+    Nav,
+    NavItem,
+    NavLink,
+    Collapse,
+    Dropdown,
+    DropdownToggle,
+    DropdownItem,
+    DropdownMenu,
+  } from "@sveltestrap/sveltestrap";
   import People from "./People.svelte";
   import Ancestry from "./Ancestry.svelte";
   import Geography from "./Geography.svelte";
@@ -7,9 +20,38 @@
   import { graphState } from "../LoadGraph.svelte";
 </script>
 
+<style>
+  .site-header {
+    border-top: 5px solid #424242;
+    border-bottom: 1px solid #e8e8e8;
+    min-height: 55.95px;
+    position: relative;
+  }
+</style>
+
 <Styles />
 
-<Container fluid>
+<header class="site-header">
+  <Navbar container="sm" theme="light">
+    <NavbarBrand href="https://mtmorgan.github.io" class="me-auto"
+      >Martin Morgan</NavbarBrand
+    >
+    <Nav>
+      <NavItem>
+        <NavLink href="https://mtmorgan.github.io/bioconductor"
+          >R / Bioconductor</NavLink
+        >
+      </NavItem>
+      <NavItem>
+        <NavLink href="https://mtmorgan.github.io/javascript"
+          >JavaScript</NavLink
+        >
+      </NavItem>
+    </Nav>
+  </Navbar>
+</header>
+
+<Container sm>
   <h1>Uncs</h1>
 
   <p>
@@ -106,3 +148,12 @@
     >.
   </p>
 </Container>
+
+<style>
+  .site-header {
+    border-top: 5px solid #424242;
+    border-bottom: 1px solid #e8e8e8;
+    min-height: 55.95px;
+    position: relative;
+  }
+</style>

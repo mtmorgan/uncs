@@ -1,8 +1,8 @@
 import sodium from "libsodium-wrappers-sumo";
 
 export const graphState = $state({
-  name: '',
-  graph: {}
+  name: "",
+  graph: {},
 });
 
 // Unencrypted graph
@@ -11,25 +11,24 @@ export const graphState = $state({
  * @param {string} url
  */
 export async function loadGraph(url) {
-  let message = '';
+  let message = "";
   try {
     const response = await fetch(url);
     if (!response.ok) {
       throw new Error(`HTTP error status: ${response.status}`);
     }
     graphState.graph = await response.json();
-    graphState.name = url.split('/').pop() ?? "";
+    graphState.name = url.split("/").pop() ?? "";
     message = `Loaded graph '${graphState.name}'`;
   } catch (error) {
-    console.error('Error fetching the file:', error);
-    message = 'Failed to load file from server.';
+    console.error("Error fetching the file:", error);
+    message = "Failed to load file from server.";
   }
 
   return message;
 }
 
 // Encrypted graph
-
 
 /**
  * @param {string} url
@@ -59,15 +58,11 @@ async function decrypt(url, password) {
     password,
     salt,
     sodium.crypto_pwhash_scryptsalsa208sha256_OPSLIMIT_INTERACTIVE,
-    sodium.crypto_pwhash_scryptsalsa208sha256_MEMLIMIT_INTERACTIVE
+    sodium.crypto_pwhash_scryptsalsa208sha256_MEMLIMIT_INTERACTIVE,
   );
 
   // Decrypt cipher buffer
-  const decrypted = sodium.crypto_secretbox_open_easy(
-    cipher,
-    nonce,
-    key
-  );
+  const decrypted = sodium.crypto_secretbox_open_easy(cipher, nonce, key);
 
   return new TextDecoder().decode(decrypted);
 }
@@ -77,12 +72,12 @@ async function decrypt(url, password) {
  * @param {string} password
  */
 export async function loadEncryptedGraph(url, password) {
-  let message = '';
+  let message = "";
   try {
     const graphText = await decrypt(url, password);
     graphState.graph = JSON.parse(graphText);
-    graphState.name = url.split('/').pop() ?? "";
-    message = 'Data decrypted!';
+    graphState.name = url.split("/").pop() ?? "";
+    message = "Data decrypted!";
   } catch (error) {
     message = "Decryption failed: incorrect password?";
   }
