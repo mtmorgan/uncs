@@ -17,7 +17,7 @@
   import Ancestry from "./Ancestry.svelte";
   import Geography from "./Geography.svelte";
   import Decrypt from "./Decrypt.svelte";
-  import { graphState } from "../LoadGraph.svelte";
+  import { graphState } from "$lib/graph.svelte";
 </script>
 
 <style>
