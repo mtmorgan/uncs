@@ -10,49 +10,91 @@ export interface NodeAttributes {
   siblings?: string;
   notes?: string;
   // Calculated attributes
+  depth?: number;
   weight?: number; // Input for persons
-  offset?: number; // Horizontal distance from parent pivot (0 to 1)
   x?: number;
   y?: number;
+  // Relation bar
+  offset?: number;
+  width?: number;
+  // Physics State
+  angle: number;
+  velocity: number;
 }
 
 export interface EdgeAttributes {
   label: "child-of" | "parent-of";
 }
 
-export const calculateMobile = (graph: DirectedGraph<NodeAttributes>) => {
-  const getWeight = (node: string): number => {
-    const attr = graph.getNodeAttributes(node);
-    let weight = attr.which === "person_node" ? 1 : 0;
-    graph.forEachOutNeighbor(node, (child) => (weight += getWeight(child)));
-    graph.setNodeAttribute(node, "weight", weight);
-    return weight;
-  };
+const DY = 50;
+const GAP = 300;
 
-  const layout = (node: string, x: number, y: number, depth: number) => {
-    graph.updateNodeAttributes(node, (attr) => ({ ...attr, x, y }));
+export const layoutClassic = (
+  graph: DirectedGraph<NodeAttributes>,
+  maxDepth: number,
+) => {
+  const PERSON_UNIT_WIDTH = 4;
+  const DY = 40;
+  const layout = (
+    node: string,
+    x: number,
+    y: number,
+    depth: number,
+  ): number => {
+    if (depth >= maxDepth) return 0;
+    graph.mergeNodeAttributes(node, { x, y, depth });
+
+    const attr = graph.getNodeAttributes(node);
     const children = graph.outNeighbors(node);
-    const gap = 150 / (depth + 1); // Narrower bars as we go deeper
+    if (children.length === 0) return PERSON_UNIT_WIDTH;
+
+    depth += attr.which === "person_node" ? 0 : 1;
+    const radius = children.map((child) => layout(child, 0, DY, depth));
 
     if (children.length === 2) {
+      // Relation
       const [l, r] = children;
+      const [lRadius, rRadius] = radius;
       const wL = graph.getNodeAttribute(l, "weight") || 1;
       const wR = graph.getNodeAttribute(r, "weight") || 1;
+      const offset = -(wR - wL) / 2;
       const total = wL + wR;
-      layout(l, x - (wR / total) * gap, y + 60, depth + 1);
-      layout(r, x + (wL / total) * gap, y + 60, depth + 1);
-    } else {
-      children.forEach((c, i) =>
-        layout(c, x + (i - (children.length - 1) / 2) * gap, y + 60, depth + 1),
-      );
+
+      const width = lRadius + rRadius + 2 * PERSON_UNIT_WIDTH;
+      const lArm = (wR / total) * width;
+      const rArm = (wL / total) * width;
+      graph.setNodeAttribute(l, "x", -lArm);
+      graph.setNodeAttribute(r, "x", +rArm);
+      graph.mergeNodeAttributes(node, {
+        offset: (offset * width) / total,
+        width,
+      });
+      return Math.max(lArm + lRadius, rArm + rRadius);
     }
+
+    // Default: Either parent -> relation, or relation w/ single child
+    return radius[0];
+  };
+
+  graph
+    .nodes()
+    .filter((node) => graph.inDegree(node) === 0)
+    .forEach((node) => layout(node, 0, -10, 0));
+};
+
+export const calculateMobile = (graph: DirectedGraph<NodeAttributes>) => {
+  const setWeight = (node: string): number => {
+    const isPerson = graph.getNodeAttribute(node, "which") === "person_node";
+    let weight = isPerson ? 1 : 0;
+    graph.forEachOutNeighbor(node, (child) => (weight += setWeight(child)));
+    graph.mergeNodeAttributes(node, { weight, angle: 0, velocity: 0 });
+    return weight;
   };
 
   graph
     .nodes()
     .filter((n) => graph.inDegree(n) === 0)
     .forEach((root) => {
-      getWeight(root);
-      layout(root, 400, 50, 0);
+      setWeight(root);
     });
 };
