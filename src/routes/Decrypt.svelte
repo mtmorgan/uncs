@@ -8,7 +8,7 @@
     InputGroup,
   } from "@sveltestrap/sveltestrap";
   import { onMount } from "svelte";
-  import { loadGraph, loadEncryptedGraph } from "../LoadGraph.svelte.js";
+  import { loadGraph, loadEncryptedGraph } from "$lib/graph.svelte";
   import { resolve } from "$app/paths";
 
   const jsonGraph = resolve("/unc_graph.json" as unknown as "/");

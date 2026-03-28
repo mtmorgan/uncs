@@ -10,7 +10,7 @@ export const graphState = $state({
 /**
  * @param {string} url
  */
-export async function loadGraph(url) {
+export const loadGraph = async (url: string) => {
   let message = "";
   try {
     const response = await fetch(url);
@@ -26,7 +26,7 @@ export async function loadGraph(url) {
   }
 
   return message;
-}
+};
 
 // Encrypted graph
 
@@ -34,7 +34,7 @@ export async function loadGraph(url) {
  * @param {string} url
  * @param {string} password
  */
-async function decrypt(url, password) {
+const decrypt = async (url: string, password: string) => {
   await sodium.ready;
 
   // Fetch file from server
@@ -65,13 +65,13 @@ async function decrypt(url, password) {
   const decrypted = sodium.crypto_secretbox_open_easy(cipher, nonce, key);
 
   return new TextDecoder().decode(decrypted);
-}
+};
 
 /**
  * @param {string} url
  * @param {string} password
  */
-export async function loadEncryptedGraph(url, password) {
+export const loadEncryptedGraph = async (url: string, password: string) => {
   let message = "";
   try {
     const graphText = await decrypt(url, password);
@@ -83,4 +83,4 @@ export async function loadEncryptedGraph(url, password) {
   }
 
   return message;
-}
+};

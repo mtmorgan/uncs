@@ -39,6 +39,7 @@
 		"leaflet": "^1.9.4",
 		"libsodium-wrappers": "^0.7.15",
 		"libsodium-wrappers-sumo": "^0.7.15",
+		"p5-svelte": "^3.1.2",
 		"sigma": "^3.0.2"
 	}
 }

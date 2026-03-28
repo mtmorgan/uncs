@@ -10,8 +10,9 @@
   } from "@sveltestrap/sveltestrap";
   import People from "./People.svelte";
   import Ancestry from "./Ancestry.svelte";
+  import Mobile from "./Mobile.svelte";
   import Decrypt from "./Decrypt.svelte";
-  import { graphState } from "../LoadGraph.svelte";
+  import { graphState } from "$lib/graph.svelte";
 </script>
 
 <Styles />
@@ -94,6 +95,14 @@
 
   <Geography />
   -->
+
+  <h2>Genealogy as mobile</h2>
+
+  {#if graphState.name}
+    {#key graphState.name}
+      <Mobile unc_graph={graphState.graph} />
+    {/key}
+  {/if}
 
   <h2>Implementation notes</h2>
 
