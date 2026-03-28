@@ -7,27 +7,12 @@
     Nav,
     NavItem,
     NavLink,
-    Collapse,
-    Dropdown,
-    DropdownToggle,
-    DropdownItem,
-    DropdownMenu,
   } from "@sveltestrap/sveltestrap";
   import People from "./People.svelte";
   import Ancestry from "./Ancestry.svelte";
-  import Geography from "./Geography.svelte";
   import Decrypt from "./Decrypt.svelte";
   import { graphState } from "../LoadGraph.svelte";
 </script>
-
-<style>
-  .site-header {
-    border-top: 5px solid #424242;
-    border-bottom: 1px solid #e8e8e8;
-    min-height: 55.95px;
-    position: relative;
-  }
-</style>
 
 <Styles />
 
