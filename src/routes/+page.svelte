@@ -7,15 +7,9 @@
     Nav,
     NavItem,
     NavLink,
-    Collapse,
-    Dropdown,
-    DropdownToggle,
-    DropdownItem,
-    DropdownMenu,
   } from "@sveltestrap/sveltestrap";
   import People from "./People.svelte";
   import Ancestry from "./Ancestry.svelte";
-  import Geography from "./Geography.svelte";
   import Mobile from "./Mobile.svelte";
   import Decrypt from "./Decrypt.svelte";
   import { graphState } from "$lib/graph.svelte";
