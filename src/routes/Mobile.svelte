@@ -6,7 +6,7 @@
     layoutClassic,
     type NodeAttributes,
   } from "$lib/mobile";
-  import { onMount } from "svelte";
+  import { onMount, untrack } from "svelte";
   import {
     Col,
     FormGroup,
@@ -21,6 +21,16 @@
 
   let width = $state(0);
   let height = $state(0);
+  // Scale mobile to fit bootstrap width breakpoints
+  let prevWidth = 0; // Local variable for comparison
+  const config = [
+    { bp: 1400, name: "xxl", depth: 9 },
+    { bp: 1200, name: "xl", depth: 8 },
+    { bp: 992, name: "lg", depth: 8 },
+    { bp: 768, name: "md", depth: 7 },
+    { bp: 576, name: "sm", depth: 6 },
+    { bp: 0, name: "xs", depth: 5 }, // The "Smallest" associate
+  ];
 
   // 1. Reactive State
   let graph = new DirectedGraph<NodeAttributes>();
@@ -94,7 +104,8 @@
     p5Instance = p5;
     p5.setup = () => {
       p5.createCanvas(width, height, p5.WEBGL);
-      p5.textAlign(p5.CENTER);
+      const bin = config.find((c) => width >= c.bp);
+      displayDepth = bin!.depth;
     };
 
     p5.draw = () => {
@@ -104,7 +115,7 @@
         .ambientLight(200)
         .pointLight(255, 255, 255, 0, 200, 200);
       p5.push();
-      p5.translate(0, -130, 0); // Move root to the top of the scene
+      p5.translate(0, -height / 2, 0); // Move root to the top of the scene
       drawGraph(p5, graph);
       p5.pop();
     };
@@ -133,7 +144,28 @@
   });
 
   $effect(() => {
+    // Resize P5 canvas on change in width
+    if (width && height) {
+      untrack(() => p5Instance?.resizeCanvas(width, height));
+    }
+  });
+
+  $effect(() => {
+    // Genealogy depth based on Bootstrap width
+    const crossedDown = config.some((c) => prevWidth >= c.bp && width < c.bp);
+    const crossedUp = config.some((c) => prevWidth < c.bp && width >= c.bp);
+    if (crossedDown || crossedUp) {
+      const bin = config.find((c) => width >= c.bp);
+      if (crossedDown) displayDepth = Math.min(displayDepth, bin!.depth);
+      if (crossedUp) displayDepth = Math.max(displayDepth, bin!.depth);
+    }
+    prevWidth = width;
+  });
+
+  $effect(() => {
+    // Update display depth
     layoutClassic(graph, displayDepth);
+    untrack(() => p5Instance?.redraw());
   });
 </script>
 
@@ -155,23 +187,16 @@
   </Col>
 </FormGroup>
 
-<div
-  class="canvas-container"
-  bind:clientWidth={width}
-  bind:clientHeight={height}
->
-  {#if width && height}
-    <P5 {sketch} />
-  {/if}
+<div bind:clientWidth={width} bind:clientHeight={height} class="canvas-wrapper">
+  <P5 {sketch} />
 </div>
 
 <style>
-  .canvas-container {
+  .canvas-wrapper {
     width: 100%;
-    height: 250px; /* Or use vh/vw */
-    background: #f0f0f0;
+    height: 280px;
+    overflow: hidden;
   }
-
   :global(canvas) {
     cursor: pointer;
   }
