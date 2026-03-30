@@ -26,26 +26,37 @@ export interface EdgeAttributes {
   label: "child-of" | "left-parent-of" | "right-parent-of";
 }
 
+export const roots = (source: DirectedGraph<NodeAttributes>) => {
+  return source.nodes().filter((n) => source.inDegree(n) === 0);
+};
+
 export const createClassicGraph = (
   source: DirectedGraph<NodeAttributes>,
 ): DirectedGraph<NodeAttributes> => {
   return source.copy();
 };
 
-export const createLeftsGraph = (
-  source: DirectedGraph<NodeAttributes>,
-): DirectedGraph<NodeAttributes> => {
-  const descendants = new Set<string>();
-  const collectDescendants = (person: string) => {
+const descendants = new Set<string>();
+const collectDescendants = (
+  graph: DirectedGraph<NodeAttributes>,
+  person: string,
+) => {
+  const collect = (person: string) => {
     graph.forEachOutNeighbor(person, (neighbor) => {
-      collectDescendants(neighbor);
+      collect(neighbor);
       if (!descendants.has(neighbor)) {
         descendants.add(neighbor);
-        collectDescendants(neighbor);
+        collect(neighbor);
       }
     });
     descendants.add(person);
   };
+  collect(person);
+};
+
+export const createLeftsGraph = (
+  source: DirectedGraph<NodeAttributes>,
+): DirectedGraph<NodeAttributes> => {
   const removeLefts = (person: string) => {
     const relation = graph.outNeighbors(person);
     if (relation.length > 0) {
@@ -58,27 +69,20 @@ export const createLeftsGraph = (
         graph.dropEdge(relation, lPerson);
         graph.dropEdge(lRelation, lrPerson);
         graph.addEdge(relation, lrPerson);
-        collectDescendants(lPerson);
+        collectDescendants(graph, lPerson);
         removeLefts(lrPerson);
       }
       rPerson && removeLefts(rPerson);
     }
   };
+
   const graph = source.copy();
-  graph
-    .nodes()
-    .filter((n) => graph.inDegree(n) === 0)
-    .forEach((root) => {
-      removeLefts(root);
-    });
-  console.log(descendants.size, descendants.keys().toArray().sort());
+  descendants.clear();
+  roots(graph).forEach((root) => removeLefts(root));
   descendants.forEach((node) => graph.dropNode(node));
 
   return graph;
 };
-
-const DY = 50;
-const GAP = 300;
 
 export const layoutGraph = (
   graph: DirectedGraph<NodeAttributes>,
@@ -127,10 +131,7 @@ export const layoutGraph = (
     return radius[0];
   };
 
-  graph
-    .nodes()
-    .filter((node) => graph.inDegree(node) === 0)
-    .forEach((node) => layout(node, 0, -10, 0));
+  roots(graph).forEach((node) => layout(node, 0, -10, 0));
 };
 
 export const calculateMobile = (graph: DirectedGraph<NodeAttributes>) => {
@@ -142,10 +143,5 @@ export const calculateMobile = (graph: DirectedGraph<NodeAttributes>) => {
     return weight;
   };
 
-  graph
-    .nodes()
-    .filter((n) => graph.inDegree(n) === 0)
-    .forEach((root) => {
-      setWeight(root);
-    });
+  roots(graph).forEach((root) => setWeight(root));
 };

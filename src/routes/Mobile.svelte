@@ -2,6 +2,7 @@
   import P5, { type p5 } from "p5-svelte";
   import { DirectedGraph } from "graphology";
   import {
+    roots,
     calculateMobile,
     createClassicGraph,
     createLeftsGraph,
@@ -118,7 +119,7 @@
       p5.pop(); // Restore coordinate system for siblings
     };
 
-    const root = graph.nodes().filter((n) => graph.inDegree(n) === 0)[0];
+    const root = roots(graph)[0];
     drawNode(root);
   };
 
