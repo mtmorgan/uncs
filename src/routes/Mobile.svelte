@@ -3,11 +3,14 @@
   import { DirectedGraph } from "graphology";
   import {
     calculateMobile,
-    layoutClassic,
+    createClassicGraph,
+    createLeftsGraph,
+    layoutGraph,
     type NodeAttributes,
   } from "$lib/mobile";
   import { onMount, untrack } from "svelte";
   import {
+    Row,
     Col,
     FormGroup,
     Label,
@@ -33,10 +36,29 @@
   ];
 
   // 1. Reactive State
+  let sourceGraph = new DirectedGraph<NodeAttributes>();
   let graph = new DirectedGraph<NodeAttributes>();
   let version = $state(0);
+
   let displayDepth: number = $state(7);
   const displayDepthOptions = Array.from({ length: 9 }, (_, i) => i + 1);
+
+  let graphType: string = $state("Classic");
+  const graphTypeOptions = ["Classic", "Lefts"];
+  const handleGraphType = (e: Event) => {
+    const target = e.target as HTMLSelectElement;
+    graphType = target.value;
+
+    // Trigger the specific layout logic
+    if (graphType === "Classic") {
+      graph = createClassicGraph(sourceGraph);
+    } else {
+      graph = createLeftsGraph(sourceGraph);
+    }
+    layoutGraph(graph, displayDepth);
+    p5Instance?.redraw();
+  };
+
   let p5Instance: p5;
   let looping = $state(false);
 
@@ -132,14 +154,15 @@
   };
 
   onMount(() => {
-    graph.import({
+    sourceGraph.import({
       nodes: unc_graph.nodes.filter(
         (node: { attributes: { which: string } }) =>
           node.attributes.which !== "synonym_node",
       ),
       edges: unc_graph.edges,
     });
-    calculateMobile(graph);
+    calculateMobile(sourceGraph);
+    graph = createClassicGraph(sourceGraph);
     version++;
   });
 
@@ -164,27 +187,40 @@
 
   $effect(() => {
     // Update display depth
-    layoutClassic(graph, displayDepth);
+    layoutGraph(graph, displayDepth);
     untrack(() => p5Instance?.redraw());
   });
 </script>
 
 <FormGroup row>
-  <Label for="displayDepth" sm={2} class="text-nowrap">Generations:</Label>
-  <Col sm={2}>
-    <Input type="select" id="displayDepth" bind:value={displayDepth}>
-      {#each displayDepthOptions as option}
-        <option value={option}>
-          {option}
-        </option>
-      {/each}
-    </Input>
-  </Col>
-  <Col sm={4}>
-    <Button outline color="dark" on:click={toggleLoop}>
-      {looping ? "Pause" : "Continue"}
-    </Button>
-  </Col>
+  <Row>
+    <Label for="graphType" sm={2} class="text-nowrap">Graph type:</Label>
+    <Col sm={2}>
+      <Input type="select" id="graphType" onchange={handleGraphType}>
+        {#each graphTypeOptions as option}
+          <option value={option}>{option}</option>
+        {/each}
+      </Input>
+    </Col>
+  </Row>
+  <Row>
+    <Label for="displayDepth" sm={2} class="text-nowrap">Generations:</Label>
+    <Col sm={2}>
+      <Input type="select" id="displayDepth" bind:value={displayDepth}>
+        {#each displayDepthOptions as option}
+          <option value={option}>{option}</option>
+        {/each}
+      </Input>
+    </Col>
+  </Row>
+  <Row>
+    <Label for="looping" sm={2} class="text-nowrap">Animation:</Label>
+    <Col sm={2}>
+      <Button id="looping" outline color="dark" on:click={toggleLoop}>
+        {looping ? "Pause" : "Continue"}
+      </Button>
+    </Col>
+  </Row>
 </FormGroup>
 
 <div bind:clientWidth={width} bind:clientHeight={height} class="canvas-wrapper">

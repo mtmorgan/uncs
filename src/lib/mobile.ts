@@ -23,13 +23,64 @@ export interface NodeAttributes {
 }
 
 export interface EdgeAttributes {
-  label: "child-of" | "parent-of";
+  label: "child-of" | "left-parent-of" | "right-parent-of";
 }
+
+export const createClassicGraph = (
+  source: DirectedGraph<NodeAttributes>,
+): DirectedGraph<NodeAttributes> => {
+  return source.copy();
+};
+
+export const createLeftsGraph = (
+  source: DirectedGraph<NodeAttributes>,
+): DirectedGraph<NodeAttributes> => {
+  const descendants = new Set<string>();
+  const collectDescendants = (person: string) => {
+    graph.forEachOutNeighbor(person, (neighbor) => {
+      collectDescendants(neighbor);
+      if (!descendants.has(neighbor)) {
+        descendants.add(neighbor);
+        collectDescendants(neighbor);
+      }
+    });
+    descendants.add(person);
+  };
+  const removeLefts = (person: string) => {
+    const relation = graph.outNeighbors(person);
+    if (relation.length > 0) {
+      // FIXME: are relations always length 2?
+      const [lPerson, rPerson] = graph.outNeighbors(relation);
+      const lRelation = graph.outNeighbors(lPerson);
+      if (lRelation.length > 0) {
+        // There is a grand-parent
+        const [_, lrPerson] = graph.outNeighbors(lRelation);
+        graph.dropEdge(relation, lPerson);
+        graph.dropEdge(lRelation, lrPerson);
+        graph.addEdge(relation, lrPerson);
+        collectDescendants(lPerson);
+        removeLefts(lrPerson);
+      }
+      rPerson && removeLefts(rPerson);
+    }
+  };
+  const graph = source.copy();
+  graph
+    .nodes()
+    .filter((n) => graph.inDegree(n) === 0)
+    .forEach((root) => {
+      removeLefts(root);
+    });
+  console.log(descendants.size, descendants.keys().toArray().sort());
+  descendants.forEach((node) => graph.dropNode(node));
+
+  return graph;
+};
 
 const DY = 50;
 const GAP = 300;
 
-export const layoutClassic = (
+export const layoutGraph = (
   graph: DirectedGraph<NodeAttributes>,
   maxDepth: number,
 ) => {
