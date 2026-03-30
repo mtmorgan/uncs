@@ -59,11 +59,7 @@
     p5Instance?.redraw();
   };
 
-  let p5Instance: p5;
   let looping = $state(false);
-
-  // P5 Sketch
-
   const toggleLoop = () => {
     looping = !looping;
     if (looping) {
@@ -72,6 +68,10 @@
       p5Instance.noLoop();
     }
   };
+
+  let p5Instance: p5;
+
+  // P5 Sketch
 
   const drawGraph = (p5: p5, graph: DirectedGraph<NodeAttributes>) => {
     const SIZE = 4;
