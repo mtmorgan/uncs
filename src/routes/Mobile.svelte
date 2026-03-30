@@ -222,6 +222,29 @@
     </Col>
   </Row>
 </FormGroup>
+{#if graphType === "Classic"}
+  <p>
+    The 'Classic' mobile represents the genealogy as-is. The size of each person
+    is proportional to the number of ancestors. The mobile is balanced, with the
+    length of each arm chosen so that the force from the mass of ancestors on
+    the left arm balances the force from the mass of ancestors on the right arm.
+  </p>
+{/if}
+{#if graphType === "Lefts"}
+  <p>
+    The 'Lefts' mobile replaces each person on the left branch (the paternal
+    parent) with the left branch's right parent (the paternal parent's maternal
+    parent). The result is an all-right (maternal parent) mobile. Not all
+    maternal parents are present on this mobile. 'Generations' is a misnomer,
+    instead representing the number of levels from the root of the mobile.
+  </p>
+{/if}
+<p>
+  Animation is meant to simulate gusts of wind, with lighter nodes (people with
+  fewer ancestors, at the bottom of the graph) respoding more to the gusts than
+  heavier nodes. When the animation is running, use the mouse / touchpad to zoom
+  and rotate the point of view.
+</p>
 
 <div bind:clientWidth={width} bind:clientHeight={height} class="canvas-wrapper">
   <P5 {sketch} />
