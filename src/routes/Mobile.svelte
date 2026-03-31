@@ -6,7 +6,7 @@
     calculateMobile,
     createClassicGraph,
     createLeftsGraph,
-    createCalderLeftsGraph,
+    createCalderGraph,
     layoutGraph,
     type NodeAttributes,
     type Mobile,
@@ -53,8 +53,8 @@
     Classic: (graph) => createClassicGraph(graph),
     Lefts: (graph) => createLeftsGraph(graph),
     Rights: (graph) => createLeftsGraph(graph),
-    "Calder Lefts": (graph) => createCalderLeftsGraph(graph),
-    "Calder Rights": (graph) => createCalderLeftsGraph(graph),
+    "Calder Lefts": (graph) => createCalderGraph(graph, "left"),
+    "Calder Rights": (graph) => createCalderGraph(graph, "right"),
   } as const;
   type GraphType = keyof typeof layouts;
   const graphTypeOptions = Object.keys(layouts) as GraphType[];

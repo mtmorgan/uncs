@@ -27,6 +27,7 @@ export interface EdgeAttributes {
 }
 
 export type Mobile = DirectedGraph<NodeAttributes>;
+export type Direction = "left" | "right";
 
 export const roots = (source: Mobile) => {
   return source.nodes().filter((n) => source.inDegree(n) === 0);
@@ -36,8 +37,11 @@ export const createClassicGraph = (source: Mobile): Mobile => {
   return source.copy();
 };
 
-const descendants = new Set<string>();
-const collectDescendants = (graph: Mobile, person: string) => {
+const collectDescendants = (
+  graph: Mobile,
+  person: string,
+  descendants: Set<string>,
+) => {
   const collect = (person: string) => {
     graph.forEachOutNeighbor(person, (neighbor) => {
       collect(neighbor);
@@ -52,6 +56,9 @@ const collectDescendants = (graph: Mobile, person: string) => {
 };
 
 export const createLeftsGraph = (source: Mobile): Mobile => {
+  const graph = source.copy();
+  const descendants = new Set<string>();
+
   const removeLefts = (person: string) => {
     const relation = graph.outNeighbors(person);
     if (relation.length > 0) {
@@ -64,40 +71,41 @@ export const createLeftsGraph = (source: Mobile): Mobile => {
         graph.dropEdge(relation, lPerson);
         graph.dropEdge(lRelation, lrPerson);
         graph.addEdge(relation, lrPerson);
-        collectDescendants(graph, lPerson);
+        collectDescendants(graph, lPerson, descendants);
         removeLefts(lrPerson);
       }
       rPerson && removeLefts(rPerson);
     }
   };
 
-  const graph = source.copy();
-  descendants.clear();
   roots(graph).forEach((root) => removeLefts(root));
   descendants.forEach((node) => graph.dropNode(node));
 
   return graph;
 };
 
-export const createCalderLeftsGraph = (source: Mobile): Mobile => {
+export const createCalderGraph = (
+  source: Mobile,
+  direction: Direction,
+): Mobile => {
   const graph = source.copy();
-  const removeCalderLefts = (person: string) => {
-    const relation = graph.outNeighbors(person);
+  const pruneNodes = new Set<string>();
+
+  const identifyPruneNodes = (person: string) => {
+    const relation = source.outNeighbors(person);
     if (relation.length > 0) {
-      const [lPerson, rPerson] = graph.outNeighbors(relation);
-      // Truncate at rPerson
-      const rRelation = rPerson && graph.outNeighbors(rPerson);
-      if (rRelation?.length > 0) {
-        graph.dropEdge(rPerson, rRelation);
-        collectDescendants(graph, rRelation[0]);
-      }
-      lPerson && removeCalderLefts(lPerson);
+      const [lPerson, rPerson] = source.outNeighbors(relation);
+      const prune = direction === "left" ? lPerson : rPerson;
+      const keep = direction === "left" ? rPerson : lPerson;
+      const keepRelation = keep && source.outNeighbors(keep);
+      if (keepRelation?.length > 0)
+        collectDescendants(source, keepRelation[0], pruneNodes);
+      if (prune) identifyPruneNodes(prune);
     }
   };
 
-  descendants.clear();
-  roots(graph).forEach((root) => removeCalderLefts(root));
-  descendants.forEach((node) => graph.dropNode(node));
+  roots(source).forEach((root) => identifyPruneNodes(root));
+  pruneNodes.forEach((node) => graph.dropNode(node));
 
   return graph;
 };
