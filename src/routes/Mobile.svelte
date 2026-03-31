@@ -9,6 +9,7 @@
     createCalderLeftsGraph,
     layoutGraph,
     type NodeAttributes,
+    type Mobile,
   } from "$lib/mobile";
   import { onMount, untrack } from "svelte";
   import {
@@ -38,24 +39,27 @@
   ];
 
   // 1. Reactive State
-  let sourceGraph = new DirectedGraph<NodeAttributes>();
-  let graph = new DirectedGraph<NodeAttributes>();
+  let sourceGraph: Mobile = new DirectedGraph<NodeAttributes>();
+  let graph: Mobile = new DirectedGraph<NodeAttributes>();
   let version = $state(0);
 
   let displayDepth: number = $state(7);
   const displayDepthOptions = Array.from({ length: 9 }, (_, i) => i + 1);
 
-  type GraphType = "Classic" | "Lefts" | "Calder Lefts";
-  const layouts: Record<
-    GraphType,
-    (graph: DirectedGraph<NodeAttributes>) => DirectedGraph<NodeAttributes>
-  > = {
-    Classic: createClassicGraph,
-    Lefts: createLeftsGraph,
-    "Calder Lefts": createCalderLeftsGraph,
-  };
+  // Graph types
+
+  type LayoutFunction = (graph: Mobile) => Mobile;
+  const layouts: Record<string, LayoutFunction> = {
+    Classic: (graph) => createClassicGraph(graph),
+    Lefts: (graph) => createLeftsGraph(graph),
+    Rights: (graph) => createLeftsGraph(graph),
+    "Calder Lefts": (graph) => createCalderLeftsGraph(graph),
+    "Calder Rights": (graph) => createCalderLeftsGraph(graph),
+  } as const;
+  type GraphType = keyof typeof layouts;
+  const graphTypeOptions = Object.keys(layouts) as GraphType[];
+
   let graphType: GraphType = $state("Classic");
-  const graphTypeOptions: GraphType[] = ["Classic", "Lefts", "Calder Lefts"];
   const handleGraphType = (e: Event) => {
     const target = e.target as HTMLSelectElement;
     graphType = target.value as GraphType;
@@ -64,6 +68,7 @@
     p5Instance?.redraw();
   };
 
+  // Looping
   let looping = $state(false);
   const toggleLoop = () => {
     looping = !looping;
@@ -74,11 +79,11 @@
     }
   };
 
-  let p5Instance: p5;
-
   // P5 Sketch
 
-  const drawGraph = (p5: p5, graph: DirectedGraph<NodeAttributes>) => {
+  let p5Instance: p5;
+
+  const drawGraph = (p5: p5, graph: Mobile) => {
     const SIZE = 4;
     const DAMPING = 0.98; // High = less friction, Low = heavy air
     const WIND_STRENGTH = 0.005;
@@ -235,7 +240,7 @@
     the left arm balances the force from the mass of ancestors on the right arm.
   </p>
 {/if}
-{#if graphType === "Lefts"}
+{#if graphType === "Lefts" || graphType === "Rights"}
   <p>
     The 'Lefts' mobile replaces each person on the left branch (the paternal
     parent) with the left branch's right parent (the paternal parent's maternal

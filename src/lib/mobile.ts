@@ -26,21 +26,18 @@ export interface EdgeAttributes {
   label: "child-of" | "left-parent-of" | "right-parent-of";
 }
 
-export const roots = (source: DirectedGraph<NodeAttributes>) => {
+export type Mobile = DirectedGraph<NodeAttributes>;
+
+export const roots = (source: Mobile) => {
   return source.nodes().filter((n) => source.inDegree(n) === 0);
 };
 
-export const createClassicGraph = (
-  source: DirectedGraph<NodeAttributes>,
-): DirectedGraph<NodeAttributes> => {
+export const createClassicGraph = (source: Mobile): Mobile => {
   return source.copy();
 };
 
 const descendants = new Set<string>();
-const collectDescendants = (
-  graph: DirectedGraph<NodeAttributes>,
-  person: string,
-) => {
+const collectDescendants = (graph: Mobile, person: string) => {
   const collect = (person: string) => {
     graph.forEachOutNeighbor(person, (neighbor) => {
       collect(neighbor);
@@ -54,9 +51,7 @@ const collectDescendants = (
   collect(person);
 };
 
-export const createLeftsGraph = (
-  source: DirectedGraph<NodeAttributes>,
-): DirectedGraph<NodeAttributes> => {
+export const createLeftsGraph = (source: Mobile): Mobile => {
   const removeLefts = (person: string) => {
     const relation = graph.outNeighbors(person);
     if (relation.length > 0) {
@@ -84,9 +79,7 @@ export const createLeftsGraph = (
   return graph;
 };
 
-export const createCalderLeftsGraph = (
-  source: DirectedGraph<NodeAttributes>,
-): DirectedGraph<NodeAttributes> => {
+export const createCalderLeftsGraph = (source: Mobile): Mobile => {
   const graph = source.copy();
   const removeCalderLefts = (person: string) => {
     const relation = graph.outNeighbors(person);
@@ -109,10 +102,7 @@ export const createCalderLeftsGraph = (
   return graph;
 };
 
-export const layoutGraph = (
-  graph: DirectedGraph<NodeAttributes>,
-  maxDepth: number,
-) => {
+export const layoutGraph = (graph: Mobile, maxDepth: number) => {
   const PERSON_UNIT_WIDTH = 4;
   const DY = 40;
   const layout = (
@@ -159,7 +149,7 @@ export const layoutGraph = (
   roots(graph).forEach((node) => layout(node, 0, -10, 0));
 };
 
-export const calculateMobile = (graph: DirectedGraph<NodeAttributes>) => {
+export const calculateMobile = (graph: Mobile) => {
   const setWeight = (node: string): number => {
     const isPerson = graph.getNodeAttribute(node, "which") === "person_node";
     let weight = isPerson ? 1 : 0;
