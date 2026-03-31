@@ -84,6 +84,31 @@ export const createLeftsGraph = (
   return graph;
 };
 
+export const createCalderLeftsGraph = (
+  source: DirectedGraph<NodeAttributes>,
+): DirectedGraph<NodeAttributes> => {
+  const graph = source.copy();
+  const removeCalderLefts = (person: string) => {
+    const relation = graph.outNeighbors(person);
+    if (relation.length > 0) {
+      const [lPerson, rPerson] = graph.outNeighbors(relation);
+      // Truncate at rPerson
+      const rRelation = rPerson && graph.outNeighbors(rPerson);
+      if (rRelation?.length > 0) {
+        graph.dropEdge(rPerson, rRelation);
+        collectDescendants(graph, rRelation[0]);
+      }
+      lPerson && removeCalderLefts(lPerson);
+    }
+  };
+
+  descendants.clear();
+  roots(graph).forEach((root) => removeCalderLefts(root));
+  descendants.forEach((node) => graph.dropNode(node));
+
+  return graph;
+};
+
 export const layoutGraph = (
   graph: DirectedGraph<NodeAttributes>,
   maxDepth: number,

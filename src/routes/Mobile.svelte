@@ -6,6 +6,7 @@
     calculateMobile,
     createClassicGraph,
     createLeftsGraph,
+    createCalderLeftsGraph,
     layoutGraph,
     type NodeAttributes,
   } from "$lib/mobile";
@@ -44,18 +45,21 @@
   let displayDepth: number = $state(7);
   const displayDepthOptions = Array.from({ length: 9 }, (_, i) => i + 1);
 
-  let graphType: string = $state("Classic");
-  const graphTypeOptions = ["Classic", "Lefts"];
+  type GraphType = "Classic" | "Lefts" | "Calder Lefts";
+  const layouts: Record<
+    GraphType,
+    (graph: DirectedGraph<NodeAttributes>) => DirectedGraph<NodeAttributes>
+  > = {
+    Classic: createClassicGraph,
+    Lefts: createLeftsGraph,
+    "Calder Lefts": createCalderLeftsGraph,
+  };
+  let graphType: GraphType = $state("Classic");
+  const graphTypeOptions: GraphType[] = ["Classic", "Lefts", "Calder Lefts"];
   const handleGraphType = (e: Event) => {
     const target = e.target as HTMLSelectElement;
-    graphType = target.value;
-
-    // Trigger the specific layout logic
-    if (graphType === "Classic") {
-      graph = createClassicGraph(sourceGraph);
-    } else {
-      graph = createLeftsGraph(sourceGraph);
-    }
+    graphType = target.value as GraphType;
+    graph = layouts[graphType](sourceGraph);
     layoutGraph(graph, displayDepth);
     p5Instance?.redraw();
   };
@@ -196,7 +200,7 @@
 <FormGroup row>
   <Row>
     <Label for="graphType" sm={2} class="text-nowrap">Graph type:</Label>
-    <Col sm={2}>
+    <Col sm={3}>
       <Input type="select" id="graphType" onchange={handleGraphType}>
         {#each graphTypeOptions as option}
           <option value={option}>{option}</option>
@@ -206,7 +210,7 @@
   </Row>
   <Row>
     <Label for="displayDepth" sm={2} class="text-nowrap">Generations:</Label>
-    <Col sm={2}>
+    <Col sm={3}>
       <Input type="select" id="displayDepth" bind:value={displayDepth}>
         {#each displayDepthOptions as option}
           <option value={option}>{option}</option>
@@ -216,7 +220,7 @@
   </Row>
   <Row>
     <Label for="looping" sm={2} class="text-nowrap">Animation:</Label>
-    <Col sm={2}>
+    <Col sm={3}>
       <Button id="looping" outline color="dark" on:click={toggleLoop}>
         {looping ? "Pause" : "Continue"}
       </Button>
