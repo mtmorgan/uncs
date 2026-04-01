@@ -55,31 +55,51 @@ const collectDescendants = (
   collect(person);
 };
 
-export const createLeftsGraph = (source: Mobile): Mobile => {
+/*
+  Replace person 'target' parent with 'opposite' grandparent, resulting in
+  trees with just 'left' or 'right' nodes from the original tree.
+*/
+export const createSidedGraph = (
+  source: Mobile,
+  direction: Direction,
+): Mobile => {
   const graph = source.copy();
-  const descendants = new Set<string>();
+  const drop = new Set<string>();
+  const rewires: {
+    relation: string;
+    grandparent: string;
+  }[] = [];
+  const target = direction === "left" ? 1 : 0;
+  const opposite = (target + 1) % 2;
 
-  const removeLefts = (person: string) => {
-    const relation = graph.outNeighbors(person);
-    if (relation.length > 0) {
-      // FIXME: are relations always length 2?
-      const [lPerson, rPerson] = graph.outNeighbors(relation);
-      const lRelation = graph.outNeighbors(lPerson);
-      if (lRelation.length > 0) {
-        // There is a grand-parent
-        const [_, lrPerson] = graph.outNeighbors(lRelation);
-        graph.dropEdge(relation, lPerson);
-        graph.dropEdge(lRelation, lrPerson);
-        graph.addEdge(relation, lrPerson);
-        collectDescendants(graph, lPerson, descendants);
-        removeLefts(lrPerson);
-      }
-      rPerson && removeLefts(rPerson);
-    }
+  const plan = (person: string) => {
+    const [relation] = source.outNeighbors(person);
+    const parents = relation ? source.outNeighbors(relation) : [];
+    if (!relation || parents.length !== 2) return;
+
+    const [tRelation] = source.outNeighbors(parents[target]);
+    const grandparents = tRelation ? source.outNeighbors(tRelation) : [];
+    if (!tRelation || grandparents.length !== 2) return;
+
+    rewires.push({
+      relation: relation,
+      grandparent: grandparents[opposite],
+    });
+    drop.add(parents[target]);
+    drop.add(tRelation);
+    collectDescendants(source, grandparents[target], drop);
+
+    plan(parents[opposite]);
+    plan(grandparents[opposite]);
   };
 
-  roots(graph).forEach((root) => removeLefts(root));
-  descendants.forEach((node) => graph.dropNode(node));
+  // Traverse source, then rewire & drop
+  roots(source).forEach((root) => plan(root));
+  rewires.forEach(({ relation, grandparent }) => {
+    if (!graph.hasEdge(relation, grandparent))
+      graph.addEdge(relation, grandparent);
+  });
+  drop.forEach((node) => graph.dropNode(node));
 
   return graph;
 };
@@ -89,7 +109,7 @@ export const createCalderGraph = (
   direction: Direction,
 ): Mobile => {
   const graph = source.copy();
-  const pruneNodes = new Set<string>();
+  const drop = new Set<string>();
 
   const identifyPruneNodes = (person: string) => {
     const relation = source.outNeighbors(person);
@@ -99,13 +119,13 @@ export const createCalderGraph = (
       const keep = direction === "left" ? rPerson : lPerson;
       const keepRelation = keep && source.outNeighbors(keep);
       if (keepRelation?.length > 0)
-        collectDescendants(source, keepRelation[0], pruneNodes);
+        collectDescendants(source, keepRelation[0], drop);
       if (prune) identifyPruneNodes(prune);
     }
   };
 
   roots(source).forEach((root) => identifyPruneNodes(root));
-  pruneNodes.forEach((node) => graph.dropNode(node));
+  drop.forEach((node) => graph.dropNode(node));
 
   return graph;
 };

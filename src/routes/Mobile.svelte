@@ -5,7 +5,7 @@
     roots,
     calculateMobile,
     createClassicGraph,
-    createLeftsGraph,
+    createSidedGraph,
     createCalderGraph,
     layoutGraph,
     type NodeAttributes,
@@ -51,8 +51,8 @@
   type LayoutFunction = (graph: Mobile) => Mobile;
   const layouts: Record<string, LayoutFunction> = {
     Classic: (graph) => createClassicGraph(graph),
-    Lefts: (graph) => createLeftsGraph(graph),
-    Rights: (graph) => createLeftsGraph(graph),
+    Lefts: (graph) => createSidedGraph(graph, "left"),
+    Rights: (graph) => createSidedGraph(graph, "right"),
     "Calder Lefts": (graph) => createCalderGraph(graph, "left"),
     "Calder Rights": (graph) => createCalderGraph(graph, "right"),
   } as const;
@@ -242,11 +242,28 @@
 {/if}
 {#if graphType === "Lefts" || graphType === "Rights"}
   <p>
-    The 'Lefts' mobile replaces each person on the left branch (the paternal
-    parent) with the left branch's right parent (the paternal parent's maternal
-    parent). The result is an all-right (maternal parent) mobile. Not all
-    maternal parents are present on this mobile. 'Generations' is a misnomer,
-    instead representing the number of levels from the root of the mobile.
+    The 'Lefts' mobile replaces the right-hand (maternal) parent with the
+    parent's left-hand (paternal) parent. The result is a mobile with only
+    left-hand (paternal) nodes. Not all paternal parents are present on this
+    mobile. 'Generations' is a misnomer, instead representing the number of
+    levels from the root of the mobile.
+  </p>
+  <p>
+    The 'Rights' mobile is the same as the 'Lefts' mobile, except replacing the
+    left parent with their right grandparent, resulting in an all-rights
+    (maternal) mobile.
+  </p>
+{/if}
+{#if graphType === "Calder Lefts" || graphType === "Calder Rights"}
+  <p>
+    The 'Calder Lefts' mobile expands each left-hand (paternal) parent, but
+    stops at the right-hand (maternal) parent. The result is a mobile with a
+    structure like Clader mobiles, where the (expanded) paternal lineage is
+    balanced by the genealogical mass represented by the maternal parent .
+  </p>
+  <p>
+    The 'Calder Rights' mobile is similar, operating on the right-hand nodes;
+    the maternal lineages are expanded and balanced by the paternal parent.
   </p>
 {/if}
 <p>
