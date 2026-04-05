@@ -69,7 +69,7 @@
   };
 
   // Looping
-  let looping = $state(false);
+  let looping = $state(true);
   const toggleLoop = () => {
     looping = !looping;
     if (looping) {
@@ -202,9 +202,68 @@
   });
 </script>
 
+<p>
+  A genealogy seems almost like a mobile. The current generation, individual
+  '0001', suspending its parents '0002' and '0003', and so on. Alexander Calder
+  defines the modern mobile. Here is Calder's <emph>Mobile XII.V - III.H</emph> at
+  the Stedelijk in Amsterdam.
+</p>
+
+<figure>
+  <img
+    src="https://s3-eu-west-1.amazonaws.com/production-static-stedelijk/images/adlib/ba-164-1747713637197.jpg"
+    alt="Alexander Calder's Mobile XII.V - III.H Stedelijk Museum"
+    style="max-width: 100%; height: auto;"
+  />
+  <figcaption>
+    Alexander Calder, <em>Mobile XII.V - III.H</em>, 1955. Collection of the
+    <a href="https://www.stedelijk.nl/en">Stedelijk Museum Amsterdam</a>.
+  </figcaption>
+</figure>
+
+<p>
+  Of course Calder's mobile is pretty amazing. It is highly abstract and
+  therefore modern. The color scheme is very reduced (black, basically; Calder
+  uses a restricted palette of subdued primary colors). The structure is a
+  repeating pattern of a shape balancing a branch, with a shape balancing a
+  branch... recursively. Mobiles could have much more complicated structure, but
+  Calder's are very simple. The shapes echo the biomorphism of Miro.
+</p>
+
+<p>
+  The mobile is kinetic in a gentle way, responding to air currents. A great
+  example is at the National Gallery in Washington, D.C., where a <a
+    href="https://www.nga.gov/artworks/56517-untitled">huge mobile</a
+  > drifts over the central foyer of the East Building.
+</p>
+
+<p>
+  A mobile requires precise balance between the left and right arms at each
+  node. The balance point is actually easy to calculate, and apparently Calder
+  was an engineer so knew in principle how to perform the calculations. But in
+  practice Calder developed his mobiles empirically through 'trial and error'.
+</p>
+
+<p>
+  Explore the idea of genealogy as mobile. The 'Classic' representation takes
+  each person in the genealogy as a node in the mobile. Parents hang on the left
+  (paternal) and right (maternal) side of the individual. The volume of each
+  individual is proportional to the number of ancestors in the genealogy, and
+  the location of the bar balances the force of ancestors on the right and left
+  arms. The animation gently blows the mobile in a quasi-mechanistic way (light
+  nodes at the base of the mobile respond more than heavier nodes toward the
+  top); watch for a long time to allow the shapes to explore space.
+</p>
+
+<p>
+  Select different types of mobile to experience representations that take
+  different views on the genealogy. Some additional detail is provided below the
+  mobile when each type is selected.
+</p>
+
 <FormGroup row>
   <Row>
-    <Label for="graphType" sm={2} class="text-nowrap">Graph type:</Label>
+    <Label for="graphType" sm={2} class="text-nowrap">Mobile type:</Label>
     <Col sm={3}>
       <Input type="select" id="graphType" onchange={handleGraphType}>
         {#each graphTypeOptions as option}
@@ -232,12 +291,18 @@
     </Col>
   </Row>
 </FormGroup>
+
+<div bind:clientWidth={width} bind:clientHeight={height} class="canvas-wrapper">
+  <P5 {sketch} />
+</div>
+
 {#if graphType === "Classic"}
   <p>
-    The 'Classic' mobile represents the genealogy as-is. The size of each person
-    is proportional to the number of ancestors. The mobile is balanced, with the
-    length of each arm chosen so that the force from the mass of ancestors on
-    the left arm balances the force from the mass of ancestors on the right arm.
+    The 'Classic' mobile represents the genealogy as-is. The volume of each
+    person is proportional to the number of ancestors. The mobile is balanced,
+    with the length of each arm chosen so that the force from the mass of
+    ancestors on the left arm balances the force from the mass of ancestors on
+    the right arm.
   </p>
 {/if}
 {#if graphType === "Lefts" || graphType === "Rights"}
@@ -265,17 +330,19 @@
     The 'Calder Rights' mobile is similar, operating on the right-hand nodes;
     the maternal lineages are expanded and balanced by the paternal parent.
   </p>
+  <p>
+    It's striking that these 'Calder' mobiles have such a simple structure. This
+    seems to be consistent with the basic tenets of abstraction in modern art,
+    with the simplicity allowing exploration of fundamental building blocks of
+    the artistic experience.
+  </p>
 {/if}
 <p>
   Animation is meant to simulate gusts of wind, with lighter nodes (people with
-  fewer ancestors, at the bottom of the graph) respoding more to the gusts than
+  fewer ancestors, at the bottom of the graph) responding more to the gusts than
   heavier nodes. When the animation is running, use the mouse / touchpad to zoom
   and rotate the point of view.
 </p>
-
-<div bind:clientWidth={width} bind:clientHeight={height} class="canvas-wrapper">
-  <P5 {sketch} />
-</div>
 
 <style>
   .canvas-wrapper {

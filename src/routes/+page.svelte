@@ -137,6 +137,13 @@
   </p>
 
   <p>
+    The mobiles use <a href="https://p5js.org/">p5.js</a> and the
+    <a href="https://p5-svelte.netlify.app/">p5-svelte</a> npm module. I used Google
+    Gemini as a 'tutor' to help me understand svelte and p5-svelte, to work with graphology
+    objects, and to improve my JavaScript programming.
+  </p>
+
+  <p>
     Package source is available on <a href="https://github.com/mtmorgan/uncs"
       >GitHub</a
     >.
