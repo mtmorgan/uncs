@@ -23,16 +23,113 @@ export interface NodeAttributes {
 }
 
 export interface EdgeAttributes {
-  label: "child-of" | "parent-of";
+  label: "child-of" | "left-parent-of" | "right-parent-of";
 }
 
-const DY = 50;
-const GAP = 300;
+export type Mobile = DirectedGraph<NodeAttributes>;
+export type Direction = "left" | "right";
 
-export const layoutClassic = (
-  graph: DirectedGraph<NodeAttributes>,
-  maxDepth: number,
+export const roots = (source: Mobile) => {
+  return source.nodes().filter((n) => source.inDegree(n) === 0);
+};
+
+export const createClassicGraph = (source: Mobile): Mobile => {
+  return source.copy();
+};
+
+const collectDescendants = (
+  graph: Mobile,
+  person: string,
+  descendants: Set<string>,
 ) => {
+  const collect = (person: string) => {
+    graph.forEachOutNeighbor(person, (neighbor) => {
+      collect(neighbor);
+      if (!descendants.has(neighbor)) {
+        descendants.add(neighbor);
+        collect(neighbor);
+      }
+    });
+    descendants.add(person);
+  };
+  collect(person);
+};
+
+/*
+  Replace person 'target' parent with 'opposite' grandparent, resulting in
+  trees with just 'left' or 'right' nodes from the original tree.
+*/
+export const createSidedGraph = (
+  source: Mobile,
+  direction: Direction,
+): Mobile => {
+  const graph = source.copy();
+  const drop = new Set<string>();
+  const rewires: {
+    relation: string;
+    grandparent: string;
+  }[] = [];
+  const target = direction === "left" ? 1 : 0;
+  const opposite = (target + 1) % 2;
+
+  const plan = (person: string) => {
+    const [relation] = source.outNeighbors(person);
+    const parents = relation ? source.outNeighbors(relation) : [];
+    if (!relation || parents.length !== 2) return;
+
+    const [tRelation] = source.outNeighbors(parents[target]);
+    const grandparents = tRelation ? source.outNeighbors(tRelation) : [];
+    if (!tRelation || grandparents.length !== 2) return;
+
+    rewires.push({
+      relation: relation,
+      grandparent: grandparents[opposite],
+    });
+    drop.add(parents[target]);
+    drop.add(tRelation);
+    collectDescendants(source, grandparents[target], drop);
+
+    plan(parents[opposite]);
+    plan(grandparents[opposite]);
+  };
+
+  // Traverse source, then rewire & drop
+  roots(source).forEach((root) => plan(root));
+  rewires.forEach(({ relation, grandparent }) => {
+    if (!graph.hasEdge(relation, grandparent))
+      graph.addEdge(relation, grandparent);
+  });
+  drop.forEach((node) => graph.dropNode(node));
+
+  return graph;
+};
+
+export const createCalderGraph = (
+  source: Mobile,
+  direction: Direction,
+): Mobile => {
+  const graph = source.copy();
+  const drop = new Set<string>();
+  const prune = direction === "left" ? 0 : 1;
+  const opposite = (prune + 1) % 2;
+
+  const plan = (person: string) => {
+    const [relation] = source.outNeighbors(person);
+    const parents = relation ? source.outNeighbors(relation) : [];
+    if (!relation || parents.length !== 2) return;
+
+    const [pruneRelation] = source.outNeighbors(parents[prune]);
+    if (pruneRelation) collectDescendants(source, pruneRelation, drop);
+    plan(parents[opposite]);
+  };
+
+  roots(source).forEach((root) => plan(root));
+  drop.forEach((node) => graph.dropNode(node));
+
+  return graph;
+};
+
+export const layoutGraph = (graph: Mobile, maxDepth: number) => {
   const PERSON_UNIT_WIDTH = 4;
   const DY = 40;
   const layout = (
@@ -76,13 +173,10 @@ export const layoutClassic = (
     return radius[0];
   };
 
-  graph
-    .nodes()
-    .filter((node) => graph.inDegree(node) === 0)
-    .forEach((node) => layout(node, 0, -10, 0));
+  roots(graph).forEach((node) => layout(node, 0, -10, 0));
 };
 
-export const calculateMobile = (graph: DirectedGraph<NodeAttributes>) => {
+export const calculateMobile = (graph: Mobile) => {
   const setWeight = (node: string): number => {
     const isPerson = graph.getNodeAttribute(node, "which") === "person_node";
     let weight = isPerson ? 1 : 0;
@@ -91,10 +185,5 @@ export const calculateMobile = (graph: DirectedGraph<NodeAttributes>) => {
     return weight;
   };
 
-  graph
-    .nodes()
-    .filter((n) => graph.inDegree(n) === 0)
-    .forEach((root) => {
-      setWeight(root);
-    });
+  roots(graph).forEach((root) => setWeight(root));
 };

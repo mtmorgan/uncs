@@ -2,12 +2,18 @@
   import P5, { type p5 } from "p5-svelte";
   import { DirectedGraph } from "graphology";
   import {
+    roots,
     calculateMobile,
-    layoutClassic,
+    createClassicGraph,
+    createSidedGraph,
+    createCalderGraph,
+    layoutGraph,
     type NodeAttributes,
+    type Mobile,
   } from "$lib/mobile";
   import { onMount, untrack } from "svelte";
   import {
+    Row,
     Col,
     FormGroup,
     Label,
@@ -33,15 +39,37 @@
   ];
 
   // 1. Reactive State
-  let graph = new DirectedGraph<NodeAttributes>();
+  let sourceGraph: Mobile = new DirectedGraph<NodeAttributes>();
+  let graph: Mobile = new DirectedGraph<NodeAttributes>();
   let version = $state(0);
+
   let displayDepth: number = $state(7);
   const displayDepthOptions = Array.from({ length: 9 }, (_, i) => i + 1);
-  let p5Instance: p5;
-  let looping = $state(false);
 
-  // P5 Sketch
+  // Graph types
 
+  type LayoutFunction = (graph: Mobile) => Mobile;
+  const layouts: Record<string, LayoutFunction> = {
+    Classic: (graph) => createClassicGraph(graph),
+    Lefts: (graph) => createSidedGraph(graph, "left"),
+    Rights: (graph) => createSidedGraph(graph, "right"),
+    "Calder Lefts": (graph) => createCalderGraph(graph, "left"),
+    "Calder Rights": (graph) => createCalderGraph(graph, "right"),
+  } as const;
+  type GraphType = keyof typeof layouts;
+  const graphTypeOptions = Object.keys(layouts) as GraphType[];
+
+  let graphType: GraphType = $state("Classic");
+  const handleGraphType = (e: Event) => {
+    const target = e.target as HTMLSelectElement;
+    graphType = target.value as GraphType;
+    graph = layouts[graphType](sourceGraph);
+    layoutGraph(graph, displayDepth);
+    p5Instance?.redraw();
+  };
+
+  // Looping
+  let looping = $state(true);
   const toggleLoop = () => {
     looping = !looping;
     if (looping) {
@@ -51,7 +79,11 @@
     }
   };
 
-  const drawGraph = (p5: p5, graph: DirectedGraph<NodeAttributes>) => {
+  // P5 Sketch
+
+  let p5Instance: p5;
+
+  const drawGraph = (p5: p5, graph: Mobile) => {
     const SIZE = 4;
     const DAMPING = 0.98; // High = less friction, Low = heavy air
     const WIND_STRENGTH = 0.005;
@@ -96,7 +128,7 @@
       p5.pop(); // Restore coordinate system for siblings
     };
 
-    const root = graph.nodes().filter((n) => graph.inDegree(n) === 0)[0];
+    const root = roots(graph)[0];
     drawNode(root);
   };
 
@@ -132,14 +164,15 @@
   };
 
   onMount(() => {
-    graph.import({
+    sourceGraph.import({
       nodes: unc_graph.nodes.filter(
         (node: { attributes: { which: string } }) =>
           node.attributes.which !== "synonym_node",
       ),
       edges: unc_graph.edges,
     });
-    calculateMobile(graph);
+    calculateMobile(sourceGraph);
+    graph = createClassicGraph(sourceGraph);
     version++;
   });
 
@@ -164,32 +197,152 @@
 
   $effect(() => {
     // Update display depth
-    layoutClassic(graph, displayDepth);
+    layoutGraph(graph, displayDepth);
     untrack(() => p5Instance?.redraw());
   });
 </script>
 
+<p>
+  A genealogy seems almost like a mobile. The current generation, individual
+  '0001', suspending its parents '0002' and '0003', and so on. Alexander Calder
+  defines the modern mobile. Here is Calder's <emph>Mobile XII.V - III.H</emph> at
+  the Stedelijk in Amsterdam.
+</p>
+
+<figure>
+  <img
+    src="https://s3-eu-west-1.amazonaws.com/production-static-stedelijk/images/adlib/ba-164-1747713637197.jpg"
+    alt="Alexander Calder's Mobile XII.V - III.H Stedelijk Museum"
+    style="max-width: 100%; height: auto;"
+  />
+  <figcaption>
+    Alexander Calder, <em>Mobile XII.V - III.H</em>, 1955. Collection of the
+    <a href="https://www.stedelijk.nl/en">Stedelijk Museum Amsterdam</a>.
+  </figcaption>
+</figure>
+
+<p>
+  Of course Calder's mobile is pretty amazing. It is highly abstract and
+  therefore modern. The color scheme is very reduced (black, basically; Calder
+  uses a restricted palette of subdued primary colors). The structure is a
+  repeating pattern of a shape balancing a branch, with a shape balancing a
+  branch... recursively. Mobiles could have much more complicated structure, but
+  Calder's are very simple. The shapes echo the biomorphism of Miro.
+</p>
+
+<p>
+  The mobile is kinetic in a gentle way, responding to air currents. A great
+  example is at the National Gallery in Washington, D.C., where a <a
+    href="https://www.nga.gov/artworks/56517-untitled">huge mobile</a
+  > drifts over the central foyer of the East Building.
+</p>
+
+<p>
+  A mobile requires precise balance between the left and right arms at each
+  node. The balance point is actually easy to calculate, and apparently Calder
+  was an engineer so knew in principle how to perform the calculations. But in
+  practice Calder developed his mobiles empirically through 'trial and error'.
+</p>
+
+<p>
+  Explore the idea of genealogy as mobile. The 'Classic' representation takes
+  each person in the genealogy as a node in the mobile. Parents hang on the left
+  (paternal) and right (maternal) side of the individual. The volume of each
+  individual is proportional to the number of ancestors in the genealogy, and
+  the location of the bar balances the force of ancestors on the right and left
+  arms. The animation gently blows the mobile in a quasi-mechanistic way (light
+  nodes at the base of the mobile respond more than heavier nodes toward the
+  top); watch for a long time to allow the shapes to explore space.
+</p>
+
+<p>
+  Select different types of mobile to experience representations that take
+  different views on the genealogy. Some additional detail is provided below the
+  mobile when each type is selected.
+</p>
+
 <FormGroup row>
-  <Label for="displayDepth" sm={2} class="text-nowrap">Generations:</Label>
-  <Col sm={2}>
-    <Input type="select" id="displayDepth" bind:value={displayDepth}>
-      {#each displayDepthOptions as option}
-        <option value={option}>
-          {option}
-        </option>
-      {/each}
-    </Input>
-  </Col>
-  <Col sm={4}>
-    <Button outline color="dark" on:click={toggleLoop}>
-      {looping ? "Pause" : "Continue"}
-    </Button>
-  </Col>
+  <Row>
+    <Label for="graphType" sm={2} class="text-nowrap">Mobile type:</Label>
+    <Col sm={3}>
+      <Input type="select" id="graphType" onchange={handleGraphType}>
+        {#each graphTypeOptions as option}
+          <option value={option}>{option}</option>
+        {/each}
+      </Input>
+    </Col>
+  </Row>
+  <Row>
+    <Label for="displayDepth" sm={2} class="text-nowrap">Generations:</Label>
+    <Col sm={3}>
+      <Input type="select" id="displayDepth" bind:value={displayDepth}>
+        {#each displayDepthOptions as option}
+          <option value={option}>{option}</option>
+        {/each}
+      </Input>
+    </Col>
+  </Row>
+  <Row>
+    <Label for="looping" sm={2} class="text-nowrap">Animation:</Label>
+    <Col sm={3}>
+      <Button id="looping" outline color="dark" on:click={toggleLoop}>
+        {looping ? "Pause" : "Continue"}
+      </Button>
+    </Col>
+  </Row>
 </FormGroup>
 
 <div bind:clientWidth={width} bind:clientHeight={height} class="canvas-wrapper">
   <P5 {sketch} />
 </div>
+
+{#if graphType === "Classic"}
+  <p>
+    The 'Classic' mobile represents the genealogy as-is. The volume of each
+    person is proportional to the number of ancestors. The mobile is balanced,
+    with the length of each arm chosen so that the force from the mass of
+    ancestors on the left arm balances the force from the mass of ancestors on
+    the right arm.
+  </p>
+{/if}
+{#if graphType === "Lefts" || graphType === "Rights"}
+  <p>
+    The 'Lefts' mobile replaces the right-hand (maternal) parent with the
+    parent's left-hand (paternal) parent. The result is a mobile with only
+    left-hand (paternal) nodes. Not all paternal parents are present on this
+    mobile. 'Generations' is a misnomer, instead representing the number of
+    levels from the root of the mobile.
+  </p>
+  <p>
+    The 'Rights' mobile is the same as the 'Lefts' mobile, except replacing the
+    left parent with their right grandparent, resulting in an all-rights
+    (maternal) mobile.
+  </p>
+{/if}
+{#if graphType === "Calder Lefts" || graphType === "Calder Rights"}
+  <p>
+    The 'Calder Lefts' mobile expands each left-hand (paternal) parent, but
+    stops at the right-hand (maternal) parent. The result is a mobile with a
+    structure like Clader mobiles, where the (expanded) paternal lineage is
+    balanced by the genealogical mass represented by the maternal parent .
+  </p>
+  <p>
+    The 'Calder Rights' mobile is similar, operating on the right-hand nodes;
+    the maternal lineages are expanded and balanced by the paternal parent.
+  </p>
+  <p>
+    It's striking that these 'Calder' mobiles have such a simple structure. This
+    seems to be consistent with the basic tenets of abstraction in modern art,
+    with the simplicity allowing exploration of fundamental building blocks of
+    the artistic experience.
+  </p>
+{/if}
+<p>
+  Animation is meant to simulate gusts of wind, with lighter nodes (people with
+  fewer ancestors, at the bottom of the graph) responding more to the gusts than
+  heavier nodes. When the animation is running, use the mouse / touchpad to zoom
+  and rotate the point of view.
+</p>
 
 <style>
   .canvas-wrapper {
