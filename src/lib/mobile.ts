@@ -110,21 +110,20 @@ export const createCalderGraph = (
 ): Mobile => {
   const graph = source.copy();
   const drop = new Set<string>();
+  const prune = direction === "left" ? 0 : 1;
+  const opposite = (prune + 1) % 2;
 
-  const identifyPruneNodes = (person: string) => {
-    const relation = source.outNeighbors(person);
-    if (relation.length > 0) {
-      const [lPerson, rPerson] = source.outNeighbors(relation);
-      const prune = direction === "left" ? lPerson : rPerson;
-      const keep = direction === "left" ? rPerson : lPerson;
-      const keepRelation = keep && source.outNeighbors(keep);
-      if (keepRelation?.length > 0)
-        collectDescendants(source, keepRelation[0], drop);
-      if (prune) identifyPruneNodes(prune);
-    }
+  const plan = (person: string) => {
+    const [relation] = source.outNeighbors(person);
+    const parents = relation ? source.outNeighbors(relation) : [];
+    if (!relation || parents.length !== 2) return;
+
+    const [pruneRelation] = source.outNeighbors(parents[prune]);
+    if (pruneRelation) collectDescendants(source, pruneRelation, drop);
+    plan(parents[opposite]);
   };
 
-  roots(source).forEach((root) => identifyPruneNodes(root));
+  roots(source).forEach((root) => plan(root));
   drop.forEach((node) => graph.dropNode(node));
 
   return graph;
